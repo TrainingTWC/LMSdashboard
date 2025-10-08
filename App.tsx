@@ -7,6 +7,8 @@ import AdminPanel from './components/AdminPanel';
 import { Spinner } from './components/Spinner';
 import { storeMappingData } from './data/storeMapping';
 import ThemeToggle from './components/ThemeToggle';
+import { dataPersistenceService } from './services/dataPersistenceService';
+import { githubUploadService } from './services/githubUploadService';
 
 
 const App: React.FC = () => {
@@ -17,6 +19,7 @@ const App: React.FC = () => {
   const [fileName, setFileName] = useState<string>('Local CSV Data');
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
+  const [dataSource, setDataSource] = useState<'localStorage' | 'github' | 'none'>('none');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
     if (typeof window !== 'undefined') {
@@ -40,12 +43,61 @@ const App: React.FC = () => {
     // Check admin session
     checkAdminSession();
     
-    // Auto-load CSV data on app startup
-    loadCSVData();
+    // Auto-load data with persistence service
+    autoLoadData();
   }, [theme]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
+
+  const autoLoadData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Initialize GitHub service with stored token
+      const token = localStorage.getItem('github_token');
+      if (token) {
+        githubUploadService.setToken(token);
+      }
+      
+      // Auto-load data from persistence service
+      const result = await dataPersistenceService.autoLoadData();
+      
+      if (result.data && result.data.length > 0) {
+        // Merge with store data if available
+        const mergedData = mergeWithStoreData(result.data as EmployeeTrainingRecord[]);
+        setData(mergedData);
+        setIsMerged(true);
+        setDataSource(result.source);
+        setFileName(result.fileName || `${result.source === 'github' ? 'GitHub' : 'Local'} CSV Data`);
+        setError(null);
+      } else {
+        // No data available
+        setData(null);
+        setDataSource('none');
+        setFileName('No Data');
+      }
+    } catch (error) {
+      console.error('Failed to auto-load data:', error);
+      setError('Failed to load training data. Please upload a CSV file.');
+      setData(null);
+      setDataSource('none');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const mergeWithStoreData = (data: EmployeeTrainingRecord[]): MergedData[] => {
+    const storeMap = new Map<string, Omit<StoreRecord, 'Store ID'>>(
+      storeMappingData.map(s => [s['Store ID'], { location: s.location, Region: s.Region, AM: s.AM, Trainer: s.Trainer }])
+    );
+
+    return data.map(emp => {
+      const storeInfo = emp['Store ID'] ? storeMap.get(emp['Store ID']) : undefined;
+      return { ...emp, ...storeInfo };
+    });
   };
   
   const checkAdminSession = () => {
@@ -99,26 +151,26 @@ const App: React.FC = () => {
               course_completion_status: cleanedD.course_completion_status === 'Completed' ? 'Completed' : 'Not Completed',
             } as EmployeeTrainingRecord;
           });
-          
+
           const firstRecordKeys = parsedData.columns.map(key => key.trim().replace(/\s+/g, ' '));
 
           if (firstRecordKeys.includes('Store ID')) {
-            const storeMap = new Map<string, Omit<StoreRecord, 'Store ID'>>(
-              storeMappingData.map(s => [s['Store ID'], { location: s.location, Region: s.Region, AM: s.AM, Trainer: s.Trainer }])
-            );
-
-            const mergedData: MergedData[] = parsedData.map(emp => {
-              const storeInfo = emp['Store ID'] ? storeMap.get(emp['Store ID']) : undefined;
-              return { ...emp, ...storeInfo };
-            });
+            const mergedData = mergeWithStoreData(parsedData);
             setData(mergedData);
             setIsMerged(true);
+            
+            // Save to persistence service
+            dataPersistenceService.saveData(mergedData, file.name);
           } else {
             setData(parsedData);
             setIsMerged(false);
+            
+            // Save to persistence service
+            dataPersistenceService.saveData(parsedData, file.name);
           }
           
           setFileName(`${file.name} (Admin Upload)`);
+          setDataSource('localStorage');
           setError(null);
           
         } catch (e) {
@@ -131,9 +183,7 @@ const App: React.FC = () => {
       console.error('File upload error:', e);
       throw e;
     }
-  };
-  
-  const loadCSVData = async () => {
+  };  const loadCSVData = async () => {
     setIsLoading(true);
     setError(null);
     
@@ -204,6 +254,23 @@ const App: React.FC = () => {
           <div className="flex-1 min-w-0">
             <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-brand-primary via-teal-500 to-emerald-500 bg-clip-text text-transparent mb-2 leading-tight">LMS Completion Dashboard</h1>
             <p className="text-slate-600 dark:text-slate-400 text-base sm:text-lg leading-relaxed">Comprehensive analytics for learning management completion tracking</p>
+            
+            {/* Data Source Indicator */}
+            {data && (
+              <div className="mt-3 flex items-center space-x-2 text-sm">
+                <div className={`w-2 h-2 rounded-full ${
+                  dataSource === 'github' ? 'bg-green-500' : 
+                  dataSource === 'localStorage' ? 'bg-blue-500' : 'bg-gray-400'
+                }`}></div>
+                <span className="text-slate-500 dark:text-slate-400">
+                  Data source: {
+                    dataSource === 'github' ? '🔄 GitHub (Auto-synced)' :
+                    dataSource === 'localStorage' ? '💾 Local Storage' :
+                    '📄 Manual Upload'
+                  } • {fileName}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             {/* Reload Data Button */}

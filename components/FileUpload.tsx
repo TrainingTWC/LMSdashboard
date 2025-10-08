@@ -1,4 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
+import { githubUploadService } from '../services/githubUploadService';
+import GitHubSetup from './GitHubSetup';
 
 interface FileUploadProps {
   onFileUpload: (file: File) => void;
@@ -10,6 +12,20 @@ interface FileUploadProps {
 
 const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, error, title, description }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isGitHubConfigured, setIsGitHubConfigured] = useState(false);
+  const [showGitHubSetup, setShowGitHubSetup] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if GitHub is already configured
+    const token = localStorage.getItem('github_token');
+    if (token) {
+      githubUploadService.setToken(token);
+      setIsGitHubConfigured(true);
+    }
+  }, []);
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -28,19 +44,42 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, error, title, des
     e.stopPropagation();
   };
 
+  const handleFileUpload = async (file: File) => {
+    // First process the file locally
+    onFileUpload(file);
+    
+    // Then try to upload to GitHub if configured
+    if (isGitHubConfigured) {
+      setIsUploading(true);
+      setUploadSuccess(false);
+      setUploadError(null);
+      
+      try {
+        await githubUploadService.uploadTrainingData(file);
+        setUploadSuccess(true);
+        setTimeout(() => setUploadSuccess(false), 3000);
+      } catch (error) {
+        setUploadError(error instanceof Error ? error.message : 'Upload to GitHub failed');
+        setTimeout(() => setUploadError(null), 5000);
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onFileUpload(e.dataTransfer.files[0]);
+      handleFileUpload(e.dataTransfer.files[0]);
       e.dataTransfer.clearData();
     }
-  }, [onFileUpload]);
+  }, [isGitHubConfigured]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      onFileUpload(e.target.files[0]);
+      handleFileUpload(e.target.files[0]);
     }
   };
 
@@ -49,6 +88,48 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, error, title, des
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-200 mb-4">{title}</h2>
         <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed max-w-2xl mx-auto">{description}</p>
+      </div>
+
+      {/* GitHub Integration Status */}
+      <div className="w-full mb-6">
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`w-3 h-3 rounded-full ${isGitHubConfigured ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                GitHub Auto-Upload: {isGitHubConfigured ? 'Enabled' : 'Not Configured'}
+              </span>
+              {isUploading && (
+                <div className="flex items-center space-x-2 text-blue-600">
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm">Uploading to GitHub...</span>
+                </div>
+              )}
+              {uploadSuccess && (
+                <div className="flex items-center space-x-1 text-green-600">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-sm">Uploaded to GitHub!</span>
+                </div>
+              )}
+              {uploadError && (
+                <div className="flex items-center space-x-1 text-red-600">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="text-sm">{uploadError}</span>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setShowGitHubSetup(true)}
+              className="text-sm px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              {isGitHubConfigured ? 'Reconfigure' : 'Setup GitHub'}
+            </button>
+          </div>
+        </div>
       </div>
       <div className="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-slate-200/50 dark:border-slate-700/50">
         <label
@@ -89,6 +170,16 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, error, title, des
           </div>
         )}
       </div>
+
+      {/* GitHub Setup Modal */}
+      <GitHubSetup
+        isOpen={showGitHubSetup}
+        onClose={() => setShowGitHubSetup(false)}
+        onSetupComplete={() => {
+          setIsGitHubConfigured(true);
+          setShowGitHubSetup(false);
+        }}
+      />
     </div>
   );
 };
