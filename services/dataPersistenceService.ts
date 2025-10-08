@@ -143,10 +143,10 @@ export class DataPersistenceService {
   /**
    * Auto-load data on app startup with fallback strategy:
    * 1. Check GitHub for uploaded files (if configured)
-   * 2. Load from local CSV file (fallback)
+   * 2. Load from GitHub repository CSV file (primary data source)
    * 3. Load from localStorage (cached data)
    */
-  static async autoLoadData(): Promise<{ data: any[] | null; source: 'localStorage' | 'github' | 'localCSV' | 'none'; fileName?: string }> {
+  static async autoLoadData(): Promise<{ data: any[] | null; source: 'localStorage' | 'github' | 'githubRepo' | 'none'; fileName?: string }> {
     try {
       // First try GitHub updates if configured
       const updateResult = await this.checkForUpdates();
@@ -159,23 +159,23 @@ export class DataPersistenceService {
         };
       }
 
-      // If no GitHub updates, try local CSV file as fallback
+      // If no GitHub updates, try GitHub repository CSV file as primary source
       try {
-        console.log('📊 Attempting to load data from local CSV...');
-        const localCSVData = await fetchTrainingDataFromGitHub(); // This now loads from local CSV
+        console.log('📊 Attempting to load data from GitHub repository...');
+        const githubRepoData = await fetchTrainingDataFromGitHub(); // This now loads from GitHub repo
         
-        if (localCSVData && localCSVData.length > 0) {
-          // Save the local CSV data to localStorage for future offline access
-          this.saveData(localCSVData, 'Local CSV Data');
+        if (githubRepoData && githubRepoData.length > 0) {
+          // Save the GitHub repo data to localStorage for future offline access
+          this.saveData(githubRepoData, 'GitHub Repository Data');
           
           return { 
-            data: localCSVData, 
-            source: 'localCSV',
-            fileName: 'Local CSV File'
+            data: githubRepoData, 
+            source: 'githubRepo',
+            fileName: 'GitHub Repository (public/data/lms-completion.csv)'
           };
         }
       } catch (error) {
-        console.warn('⚠️ Local CSV fallback failed:', error);
+        console.warn('⚠️ GitHub repository fallback failed:', error);
       }
 
       // Final fallback to localStorage

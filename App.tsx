@@ -19,7 +19,7 @@ const App: React.FC = () => {
   const [fileName, setFileName] = useState<string>('Local CSV Data');
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
-  const [dataSource, setDataSource] = useState<'localStorage' | 'github' | 'localCSV' | 'none'>('none');
+  const [dataSource, setDataSource] = useState<'localStorage' | 'github' | 'githubRepo' | 'none'>('none');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
     if (typeof window !== 'undefined') {
@@ -73,7 +73,7 @@ const App: React.FC = () => {
         setDataSource(result.source);
         setFileName(result.fileName || `${
           result.source === 'github' ? 'GitHub' : 
-          result.source === 'localCSV' ? 'Local CSV' : 
+          result.source === 'githubRepo' ? 'GitHub Repository' : 
           'Local'
         } CSV Data`);
         setError(null);
@@ -264,13 +264,13 @@ const App: React.FC = () => {
               <div className="mt-3 flex items-center space-x-2 text-sm">
                 <div className={`w-2 h-2 rounded-full ${
                   dataSource === 'github' ? 'bg-green-500' : 
-                  dataSource === 'localCSV' ? 'bg-blue-500' :
+                  dataSource === 'githubRepo' ? 'bg-blue-500' :
                   dataSource === 'localStorage' ? 'bg-yellow-500' : 'bg-gray-400'
                 }`}></div>
                 <span className="text-slate-500 dark:text-slate-400">
                   Data source: {
                     dataSource === 'github' ? '🔄 GitHub (Auto-synced)' :
-                    dataSource === 'localCSV' ? '📊 Local CSV File' :
+                    dataSource === 'githubRepo' ? '📊 GitHub Repository' :
                     dataSource === 'localStorage' ? '💾 Local Storage' :
                     '📄 Manual Upload'
                   } • {fileName}
