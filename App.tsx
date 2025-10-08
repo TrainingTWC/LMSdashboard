@@ -19,7 +19,7 @@ const App: React.FC = () => {
   const [fileName, setFileName] = useState<string>('Local CSV Data');
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
-  const [dataSource, setDataSource] = useState<'localStorage' | 'github' | 'none'>('none');
+  const [dataSource, setDataSource] = useState<'localStorage' | 'github' | 'googleSheets' | 'none'>('none');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
     if (typeof window !== 'undefined') {
@@ -71,7 +71,11 @@ const App: React.FC = () => {
         setData(mergedData);
         setIsMerged(true);
         setDataSource(result.source);
-        setFileName(result.fileName || `${result.source === 'github' ? 'GitHub' : 'Local'} CSV Data`);
+        setFileName(result.fileName || `${
+          result.source === 'github' ? 'GitHub' : 
+          result.source === 'googleSheets' ? 'Google Sheets' : 
+          'Local'
+        } CSV Data`);
         setError(null);
       } else {
         // No data available
@@ -260,11 +264,13 @@ const App: React.FC = () => {
               <div className="mt-3 flex items-center space-x-2 text-sm">
                 <div className={`w-2 h-2 rounded-full ${
                   dataSource === 'github' ? 'bg-green-500' : 
-                  dataSource === 'localStorage' ? 'bg-blue-500' : 'bg-gray-400'
+                  dataSource === 'googleSheets' ? 'bg-blue-500' :
+                  dataSource === 'localStorage' ? 'bg-yellow-500' : 'bg-gray-400'
                 }`}></div>
                 <span className="text-slate-500 dark:text-slate-400">
                   Data source: {
                     dataSource === 'github' ? '🔄 GitHub (Auto-synced)' :
+                    dataSource === 'googleSheets' ? '📊 Google Sheets (Live)' :
                     dataSource === 'localStorage' ? '💾 Local Storage' :
                     '📄 Manual Upload'
                   } • {fileName}

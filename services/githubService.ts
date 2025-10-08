@@ -1,7 +1,9 @@
-// Configuration for GitHub CSV file
+ // Configuration for GitHub CSV file
 const GITHUB_CONFIG = {
-  // For local testing: serve the CSV file from the public folder
-  // In production, this will be your actual GitHub raw file URL
+  // Primary: Google Sheets CSV export URL (fallback)
+  GOOGLE_SHEETS_URL: 'https://docs.google.com/spreadsheets/d/1YVVKJ8VrJF7dkH8fxqVMnrB_dGKJhB1Pn8dn3FQHXUE/export?format=csv&gid=0',
+  
+  // Secondary: Local CSV file (for development)
   CSV_URL: '/data/lms-completion.csv',
   
   // Timeout for requests (in milliseconds)
@@ -42,59 +44,71 @@ export interface TrainingRecord {
 }
 
 /**
- * Fetches CSV data from GitHub repository
+ * Fetches CSV data with multiple fallback options:
+ * 1. GitHub repository (if available)  
+ * 2. Google Sheets (primary fallback)
+ * 3. Local CSV file (development fallback)
  * @returns Promise<TrainingRecord[]> Array of training records
  */
 export async function fetchTrainingDataFromGitHub(): Promise<TrainingRecord[]> {
   let lastError: Error | null = null;
   
-  for (let attempt = 1; attempt <= GITHUB_CONFIG.MAX_RETRIES; attempt++) {
-    try {
-      console.log(`Attempting to fetch data from GitHub (attempt ${attempt}/${GITHUB_CONFIG.MAX_RETRIES})`);
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), GITHUB_CONFIG.TIMEOUT);
-      
-      const response = await fetch(GITHUB_CONFIG.CSV_URL, {
-        method: 'GET',
-        headers: {
-          'Accept': 'text/csv,text/plain,*/*',
-          'Cache-Control': 'no-cache'
-        },
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`GitHub request failed: ${response.status} ${response.statusText}`);
-      }
-      
-      const csvText = await response.text();
-      
-      if (!csvText || csvText.trim().length === 0) {
-        throw new Error('Empty CSV data received from GitHub');
-      }
-      
-      console.log('Successfully fetched CSV data from GitHub');
-      console.log(`Data size: ${csvText.length} characters`);
-      
-      // Parse CSV data
-      const data = parseCSVData(csvText);
-      
-      console.log(`Parsed ${data.length} training records from GitHub`);
-      
-      return data;
-      
-    } catch (error) {
-      lastError = error as Error;
-      console.error(`Attempt ${attempt} failed:`, error);
-      
-      if (attempt < GITHUB_CONFIG.MAX_RETRIES) {
-        console.log(`Retrying in ${GITHUB_CONFIG.RETRY_DELAY}ms...`);
-        await new Promise(resolve => setTimeout(resolve, GITHUB_CONFIG.RETRY_DELAY));
+  // Try multiple data sources in order
+  const dataSources = [
+    { name: 'Google Sheets', url: GITHUB_CONFIG.GOOGLE_SHEETS_URL },
+    { name: 'Local CSV', url: GITHUB_CONFIG.CSV_URL }
+  ];
+  
+  for (const source of dataSources) {
+    for (let attempt = 1; attempt <= GITHUB_CONFIG.MAX_RETRIES; attempt++) {
+      try {
+        console.log(`Attempting to fetch data from ${source.name} (attempt ${attempt}/${GITHUB_CONFIG.MAX_RETRIES})`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), GITHUB_CONFIG.TIMEOUT);
+        
+        const response = await fetch(source.url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'text/csv,text/plain,*/*',
+            'Cache-Control': 'no-cache'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`${source.name} request failed: ${response.status} ${response.statusText}`);
+        }
+        
+        const csvText = await response.text();
+        
+        if (!csvText || csvText.trim().length === 0) {
+          throw new Error(`Empty CSV data received from ${source.name}`);
+        }
+        
+        console.log(`✅ Successfully fetched CSV data from ${source.name}`);
+        console.log(`Data size: ${csvText.length} characters`);
+        
+        // Parse CSV data
+        const data = parseCSVData(csvText);
+        
+        console.log(`✅ Parsed ${data.length} training records from ${source.name}`);
+        
+        return data;
+        
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`❌ ${source.name} attempt ${attempt} failed:`, error);
+        
+        if (attempt < GITHUB_CONFIG.MAX_RETRIES) {
+          console.log(`⏳ Retrying ${source.name} in ${GITHUB_CONFIG.RETRY_DELAY}ms...`);
+          await new Promise(resolve => setTimeout(resolve, GITHUB_CONFIG.RETRY_DELAY));
+        }
       }
     }
+    console.log(`❌ ${source.name} failed after ${GITHUB_CONFIG.MAX_RETRIES} attempts, trying next source...`);
   }
   
   throw new Error(`Failed to fetch data from GitHub after ${GITHUB_CONFIG.MAX_RETRIES} attempts. Last error: ${lastError?.message}`);

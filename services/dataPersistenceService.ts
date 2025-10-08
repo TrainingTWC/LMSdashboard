@@ -1,4 +1,5 @@
 import { githubUploadService } from './githubUploadService';
+import { fetchTrainingDataFromGitHub } from './githubService';
 
 export interface DataPersistence {
   hasStoredData: boolean;
@@ -140,11 +141,14 @@ export class DataPersistenceService {
   }
 
   /**
-   * Auto-load data on app startup
+   * Auto-load data on app startup with multiple fallbacks:
+   * 1. Check GitHub for uploaded files (if configured)
+   * 2. Load from Google Sheets (primary fallback)
+   * 3. Load from localStorage (cached data)
    */
-  static async autoLoadData(): Promise<{ data: any[] | null; source: 'localStorage' | 'github' | 'none'; fileName?: string }> {
+  static async autoLoadData(): Promise<{ data: any[] | null; source: 'localStorage' | 'github' | 'googleSheets' | 'none'; fileName?: string }> {
     try {
-      // First check for updates from GitHub
+      // First try GitHub updates if configured
       const updateResult = await this.checkForUpdates();
       
       if (updateResult.hasUpdates && updateResult.data) {
@@ -155,7 +159,26 @@ export class DataPersistenceService {
         };
       }
 
-      // Fallback to localStorage
+      // If no GitHub updates, try Google Sheets as primary fallback
+      try {
+        console.log('📊 Attempting to load data from Google Sheets...');
+        const googleSheetsData = await fetchTrainingDataFromGitHub(); // This now includes Google Sheets fallback
+        
+        if (googleSheetsData && googleSheetsData.length > 0) {
+          // Save the Google Sheets data to localStorage for future offline access
+          this.saveData(googleSheetsData, 'Google Sheets Data');
+          
+          return { 
+            data: googleSheetsData, 
+            source: 'googleSheets',
+            fileName: 'Google Sheets (Live Data)'
+          };
+        }
+      } catch (error) {
+        console.warn('⚠️ Google Sheets fallback failed:', error);
+      }
+
+      // Final fallback to localStorage
       const { data, metadata } = this.loadData();
       
       if (data && data.length > 0) {
@@ -168,9 +191,9 @@ export class DataPersistenceService {
 
       return { data: null, source: 'none' };
     } catch (error) {
-      console.error('Auto-load failed:', error);
+      console.error('❌ Auto-load failed:', error);
       
-      // Fallback to localStorage only
+      // Emergency fallback to localStorage only
       const { data, metadata } = this.loadData();
       return { 
         data: data && data.length > 0 ? data : null, 
