@@ -19,7 +19,7 @@ const App: React.FC = () => {
   const [fileName, setFileName] = useState<string>('Local CSV Data');
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
-  const [dataSource, setDataSource] = useState<'localStorage' | 'github' | 'githubRepo' | 'none'>('none');
+  const [dataSource, setDataSource] = useState<'githubRepo' | 'none'>('none');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
     if (typeof window !== 'undefined') {
@@ -71,11 +71,7 @@ const App: React.FC = () => {
         setData(mergedData);
         setIsMerged(true);
         setDataSource(result.source);
-        setFileName(result.fileName || `${
-          result.source === 'github' ? 'GitHub' : 
-          result.source === 'githubRepo' ? 'GitHub Repository' : 
-          'Local'
-        } CSV Data`);
+        setFileName(result.fileName || 'GitHub Repository CSV Data');
         setError(null);
       } else {
         // No data available
@@ -174,7 +170,7 @@ const App: React.FC = () => {
           }
           
           setFileName(`${file.name} (Admin Upload)`);
-          setDataSource('localStorage');
+          setDataSource('githubRepo');
           setError(null);
           
         } catch (e) {
@@ -248,7 +244,7 @@ const App: React.FC = () => {
   };
   
   const handleReload = () => {
-    loadCSVData();
+    autoLoadData();
   };
 
   return (
@@ -263,16 +259,12 @@ const App: React.FC = () => {
             {data && (
               <div className="mt-3 flex items-center space-x-2 text-sm">
                 <div className={`w-2 h-2 rounded-full ${
-                  dataSource === 'github' ? 'bg-green-500' : 
-                  dataSource === 'githubRepo' ? 'bg-blue-500' :
-                  dataSource === 'localStorage' ? 'bg-yellow-500' : 'bg-gray-400'
+                  dataSource === 'githubRepo' ? 'bg-blue-500' : 'bg-gray-400'
                 }`}></div>
                 <span className="text-slate-500 dark:text-slate-400">
                   Data source: {
-                    dataSource === 'github' ? '🔄 GitHub (Auto-synced)' :
                     dataSource === 'githubRepo' ? '📊 GitHub Repository' :
-                    dataSource === 'localStorage' ? '💾 Local Storage' :
-                    '📄 Manual Upload'
+                    '� No Data Available'
                   } • {fileName}
                 </span>
               </div>

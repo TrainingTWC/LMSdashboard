@@ -141,65 +141,33 @@ export class DataPersistenceService {
   }
 
   /**
-   * Auto-load data on app startup with fallback strategy:
-   * 1. Check GitHub for uploaded files (if configured)
-   * 2. Load from GitHub repository CSV file (primary data source)
-   * 3. Load from localStorage (cached data)
+   * Auto-load data ONLY from GitHub repository
+   * No fallbacks - only GitHub repo CSV file
    */
-  static async autoLoadData(): Promise<{ data: any[] | null; source: 'localStorage' | 'github' | 'githubRepo' | 'none'; fileName?: string }> {
+  static async autoLoadData(): Promise<{ data: any[] | null; source: 'githubRepo' | 'none'; fileName?: string }> {
     try {
-      // First try GitHub updates if configured
-      const updateResult = await this.checkForUpdates();
+      console.log('🔄 Loading data ONLY from GitHub repository...');
       
-      if (updateResult.hasUpdates && updateResult.data) {
-        return { 
-          data: updateResult.data, 
-          source: 'github',
-          fileName: this.getDataPersistenceInfo().fileName || undefined
-        };
-      }
-
-      // If no GitHub updates, try GitHub repository CSV file as primary source
-      try {
-        console.log('📊 Attempting to load data from GitHub repository...');
-        const githubRepoData = await fetchTrainingDataFromGitHub(); // This now loads from GitHub repo
+      // Load ONLY from GitHub repository CSV file
+      const githubRepoData = await fetchTrainingDataFromGitHub();
+      
+      if (githubRepoData && githubRepoData.length > 0) {
+        // Save the GitHub repo data to localStorage for caching only
+        this.saveData(githubRepoData, 'GitHub Repository Data');
         
-        if (githubRepoData && githubRepoData.length > 0) {
-          // Save the GitHub repo data to localStorage for future offline access
-          this.saveData(githubRepoData, 'GitHub Repository Data');
-          
-          return { 
-            data: githubRepoData, 
-            source: 'githubRepo',
-            fileName: 'GitHub Repository (public/data/lms-completion.csv)'
-          };
-        }
-      } catch (error) {
-        console.warn('⚠️ GitHub repository fallback failed:', error);
-      }
-
-      // Final fallback to localStorage
-      const { data, metadata } = this.loadData();
-      
-      if (data && data.length > 0) {
         return { 
-          data, 
-          source: 'localStorage',
-          fileName: metadata?.fileName
+          data: githubRepoData, 
+          source: 'githubRepo',
+          fileName: 'GitHub Repository (public/data/lms-completion.csv)'
         };
       }
-
-      return { data: null, source: 'none' };
-    } catch (error) {
-      console.error('❌ Auto-load failed:', error);
       
-      // Emergency fallback to localStorage only
-      const { data, metadata } = this.loadData();
-      return { 
-        data: data && data.length > 0 ? data : null, 
-        source: data ? 'localStorage' : 'none',
-        fileName: metadata?.fileName
-      };
+      // If GitHub fails, return no data
+      return { data: null, source: 'none' };
+      
+    } catch (error) {
+      console.error('❌ GitHub repository loading failed:', error);
+      return { data: null, source: 'none' };
     }
   }
 }
