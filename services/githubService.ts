@@ -1,7 +1,8 @@
- // Configuration for GitHub CSV file
-const GITHUB_CONFIG = {
-  // Use jsDelivr CDN for CORS-enabled GitHub file access
-  CSV_URL: 'https://cdn.jsdelivr.net/gh/TrainingTWC/LMSdashboard@master/public/data/lms-completion.csv',
+// Configuration for Google Sheets Apps Script
+const GOOGLE_SHEETS_CONFIG = {
+  // Replace this with your deployed Google Apps Script web app URL
+  // Example: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec',
   
   // Timeout for requests (in milliseconds)
   TIMEOUT: 30000,

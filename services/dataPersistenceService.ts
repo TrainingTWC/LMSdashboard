@@ -1,5 +1,5 @@
 import { githubUploadService } from './githubUploadService';
-import { fetchTrainingDataFromGitHub } from './githubService';
+import { fetchTrainingDataFromGoogleSheets } from './dataService';
 
 export interface DataPersistence {
   hasStoredData: boolean;
@@ -144,20 +144,20 @@ export class DataPersistenceService {
    * Auto-load data ONLY from GitHub repository
    * No fallbacks - only GitHub repo CSV file
    */
-  static async autoLoadData(): Promise<{ data: any[] | null; source: 'githubRepo' | 'none'; fileName?: string }> {
+  static async autoLoadData(): Promise<{ data: any[] | null; source: 'googleSheets' | 'none'; fileName?: string }> {
     try {
       console.log('🔄 Loading data ONLY from GitHub repository...');
       
       // Load ONLY from GitHub repository CSV file
-      const githubRepoData = await fetchTrainingDataFromGitHub();
+      const githubRepoData = await fetchTrainingDataFromGoogleSheets();
       
       if (githubRepoData && githubRepoData.length > 0) {
         // Save the GitHub repo data to localStorage for caching only
-        this.saveData(githubRepoData, 'GitHub Repository Data');
+        this.saveData(githubRepoData, 'Google Sheets Data');
         
         return { 
           data: githubRepoData, 
-          source: 'githubRepo',
+          source: 'googleSheets',
           fileName: 'GitHub Repository (public/data/lms-completion.csv)'
         };
       }

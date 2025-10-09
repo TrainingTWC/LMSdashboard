@@ -9,6 +9,7 @@ import { storeMappingData } from './data/storeMapping';
 import ThemeToggle from './components/ThemeToggle';
 import { dataPersistenceService } from './services/dataPersistenceService';
 import { githubUploadService } from './services/githubUploadService';
+import { getConfigurationStatus } from './services/dataService';
 
 
 const App: React.FC = () => {
@@ -19,7 +20,7 @@ const App: React.FC = () => {
   const [fileName, setFileName] = useState<string>('Local CSV Data');
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
-  const [dataSource, setDataSource] = useState<'githubRepo' | 'none'>('none');
+  const [dataSource, setDataSource] = useState<'googleSheets' | 'none'>('none');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
     if (typeof window !== 'undefined') {
@@ -170,7 +171,7 @@ const App: React.FC = () => {
           }
           
           setFileName(`${file.name} (Admin Upload)`);
-          setDataSource('githubRepo');
+          setDataSource('googleSheets');
           setError(null);
           
         } catch (e) {
@@ -259,11 +260,11 @@ const App: React.FC = () => {
             {data && (
               <div className="mt-3 flex items-center space-x-2 text-sm">
                 <div className={`w-2 h-2 rounded-full ${
-                  dataSource === 'githubRepo' ? 'bg-blue-500' : 'bg-gray-400'
+                  dataSource === 'googleSheets' ? 'bg-green-500' : 'bg-gray-400'
                 }`}></div>
                 <span className="text-slate-500 dark:text-slate-400">
                   Data source: {
-                    dataSource === 'githubRepo' ? '📊 GitHub Repository' :
+                    dataSource === 'googleSheets' ? '📊 Google Sheets' :
                     '� No Data Available'
                   } • {fileName}
                 </span>
