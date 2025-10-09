@@ -1,5 +1,6 @@
 import { githubUploadService } from './githubUploadService';
 import { fetchTrainingDataFromGoogleSheets } from './dataService';
+import { fetchTrainingDataWithFallback } from './alternativeDataService';
 
 export interface DataPersistence {
   hasStoredData: boolean;
@@ -141,25 +142,45 @@ export class DataPersistenceService {
   }
 
   /**
-   * Auto-load data ONLY from GitHub repository
-   * No fallbacks - only GitHub repo CSV file
+   * Auto-load data with multiple fallback options
+   * Tries Google Sheets first, then alternative sources
    */
   static async autoLoadData(): Promise<{ data: any[] | null; source: 'googleSheets' | 'none'; fileName?: string }> {
     try {
-      console.log('🔄 Loading data ONLY from GitHub repository...');
+      console.log('🔄 Loading data with fallback options...');
       
-      // Load ONLY from GitHub repository CSV file
-      const githubRepoData = await fetchTrainingDataFromGoogleSheets();
-      
-      if (githubRepoData && githubRepoData.length > 0) {
-        // Save the GitHub repo data to localStorage for caching only
-        this.saveData(githubRepoData, 'Google Sheets Data');
+      // First try the primary Google Sheets service
+      try {
+        const googleSheetsData = await fetchTrainingDataFromGoogleSheets();
         
-        return { 
-          data: githubRepoData, 
-          source: 'googleSheets',
-          fileName: 'GitHub Repository (public/data/lms-completion.csv)'
-        };
+        if (googleSheetsData && googleSheetsData.length > 0) {
+          this.saveData(googleSheetsData, 'Google Sheets Data');
+          
+          return { 
+            data: googleSheetsData, 
+            source: 'googleSheets',
+            fileName: 'Google Sheets (Live Data)'
+          };
+        }
+      } catch (error) {
+        console.warn('⚠️ Primary Google Sheets failed, trying fallback options:', error);
+      }
+      
+      // Try alternative data sources
+      try {
+        const fallbackResult = await fetchTrainingDataWithFallback();
+        
+        if (fallbackResult.data && fallbackResult.data.length > 0) {
+          this.saveData(fallbackResult.data, `${fallbackResult.source} Data`);
+          
+          return { 
+            data: fallbackResult.data, 
+            source: 'googleSheets', // Keep as googleSheets for UI consistency
+            fileName: `${fallbackResult.source} (${new Date(fallbackResult.timestamp).toLocaleString()})`
+          };
+        }
+      } catch (error) {
+        console.error('❌ All fallback options failed:', error);
       }
       
       // If GitHub fails, return no data

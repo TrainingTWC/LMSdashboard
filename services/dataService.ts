@@ -78,16 +78,23 @@ export async function fetchTrainingDataFromGoogleSheets(): Promise<TrainingRecor
       
       const responseData = await response.json();
       
-      if (!responseData || responseData.error) {
-        throw new Error(`Google Apps Script error: ${responseData.error || 'Unknown error'}`);
+      console.log('📊 Google Sheets Response:', responseData);
+      
+      if (!responseData) {
+        throw new Error('Empty response from Google Apps Script');
       }
       
-      if (!responseData.success || !Array.isArray(responseData.data)) {
-        throw new Error(`Invalid response format from Google Apps Script`);
+      if (responseData.error || !responseData.success) {
+        throw new Error(`Google Apps Script error: ${responseData.error || responseData.message || 'Unknown error'}`);
+      }
+      
+      if (!Array.isArray(responseData.data)) {
+        throw new Error(`Invalid response format from Google Apps Script - expected data array, got: ${typeof responseData.data}`);
       }
       
       console.log(`✅ Successfully fetched data from Google Sheets`);
       console.log(`📊 Records received: ${responseData.data.length}`);
+      console.log(`🕒 Data timestamp: ${responseData.timestamp || 'unknown'}`);
       
       // Validate and transform data
       const validatedData = validateTrainingData(responseData.data);
