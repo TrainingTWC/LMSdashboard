@@ -1,7 +1,7 @@
  // Configuration for GitHub CSV file
 const GITHUB_CONFIG = {
-  // GitHub API URL for your repository's CSV data (CORS-enabled)
-  CSV_URL: 'https://api.github.com/repos/TrainingTWC/LMSdashboard/contents/public/data/lms-completion.csv',
+  // Use jsDelivr CDN for CORS-enabled GitHub file access
+  CSV_URL: 'https://cdn.jsdelivr.net/gh/TrainingTWC/LMSdashboard@master/public/data/lms-completion.csv',
   
   // Timeout for requests (in milliseconds)
   TIMEOUT: 30000,
@@ -41,16 +41,16 @@ export interface TrainingRecord {
 }
 
 /**
- * Fetches CSV data ONLY from GitHub repository using GitHub API (CORS-enabled)
+ * Fetches CSV data from GitHub repository using jsDelivr CDN (CORS-enabled)
  * @returns Promise<TrainingRecord[]> Array of training records
  */
 export async function fetchTrainingDataFromGitHub(): Promise<TrainingRecord[]> {
   let lastError: Error | null = null;
   
-  // Try ONLY GitHub API - no fallbacks
+  // Try jsDelivr CDN - CORS enabled
   for (let attempt = 1; attempt <= GITHUB_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      console.log(`🔄 Attempting to fetch data from GitHub API (attempt ${attempt}/${GITHUB_CONFIG.MAX_RETRIES})`);
+      console.log(`🔄 Attempting to fetch data from jsDelivr CDN (attempt ${attempt}/${GITHUB_CONFIG.MAX_RETRIES})`);
       console.log(`📍 URL: ${GITHUB_CONFIG.CSV_URL}`);
       
       const controller = new AbortController();
@@ -59,7 +59,7 @@ export async function fetchTrainingDataFromGitHub(): Promise<TrainingRecord[]> {
       const response = await fetch(GITHUB_CONFIG.CSV_URL, {
         method: 'GET',
         headers: {
-          'Accept': 'application/vnd.github.v3+json',
+          'Accept': 'text/csv,text/plain,*/*',
           'Cache-Control': 'no-cache'
         },
         signal: controller.signal
@@ -68,39 +68,31 @@ export async function fetchTrainingDataFromGitHub(): Promise<TrainingRecord[]> {
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error(`GitHub API request failed: ${response.status} ${response.statusText}`);
+        throw new Error(`jsDelivr CDN request failed: ${response.status} ${response.statusText}`);
       }
       
-      const apiResponse = await response.json();
-      
-      // GitHub API returns base64 encoded content
-      if (!apiResponse.content) {
-        throw new Error('No content found in GitHub API response');
-      }
-      
-      // Decode base64 content
-      const csvText = atob(apiResponse.content.replace(/\n/g, ''));
+      const csvText = await response.text();
       
       if (!csvText || csvText.trim().length === 0) {
-        throw new Error(`Empty CSV data received from GitHub API`);
+        throw new Error(`Empty CSV data received from jsDelivr CDN`);
       }
       
-      console.log(`✅ Successfully fetched CSV data from GitHub API`);
+      console.log(`✅ Successfully fetched CSV data from jsDelivr CDN`);
       console.log(`📊 Data size: ${csvText.length} characters`);
       
       // Parse CSV data
       const data = parseCSVData(csvText);
       
-      console.log(`✅ Parsed ${data.length} training records from GitHub API`);
+      console.log(`✅ Parsed ${data.length} training records from jsDelivr CDN`);
       
       return data;
       
     } catch (error) {
       lastError = error as Error;
-      console.error(`❌ GitHub API attempt ${attempt} failed:`, error);
+      console.error(`❌ jsDelivr CDN attempt ${attempt} failed:`, error);
       
       if (attempt < GITHUB_CONFIG.MAX_RETRIES) {
-        console.log(`⏳ Retrying GitHub API in ${GITHUB_CONFIG.RETRY_DELAY}ms...`);
+        console.log(`⏳ Retrying jsDelivr CDN in ${GITHUB_CONFIG.RETRY_DELAY}ms...`);
         await new Promise(resolve => setTimeout(resolve, GITHUB_CONFIG.RETRY_DELAY));
       }
     }
