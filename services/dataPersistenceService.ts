@@ -166,7 +166,7 @@ export class DataPersistenceService {
         console.warn('⚠️ Primary Google Sheets failed, trying fallback options:', error);
       }
       
-      // Try alternative data sources
+      // Try alternative data sources with multiple fallbacks
       try {
         const fallbackResult = await fetchTrainingDataWithFallback();
         
@@ -180,7 +180,7 @@ export class DataPersistenceService {
           };
         }
       } catch (error) {
-        console.error('❌ All fallback options failed:', error);
+        console.error('❌ All data sources failed:', error);
       }
       
       // If GitHub fails, return no data
