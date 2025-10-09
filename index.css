@@ -11,11 +11,29 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Improve mobile touch interactions */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Dark mode support */
 .dark {
   color-scheme: dark;
+}
+
+/* Mobile Touch Optimization */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Custom scrollbar hiding for mobile filters */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Custom animations */
@@ -38,6 +56,17 @@ body {
   animation-delay: 150ms;
 }
 
+/* Chart Mobile Optimizations */
+.recharts-wrapper {
+  font-size: 12px;
+}
+
+@media (min-width: 640px) {
+  .recharts-wrapper {
+    font-size: 14px;
+  }
+}
+
 /* Recharts Legend Color Fix */
 .recharts-legend-item {
   color: #64748b !important;
@@ -46,6 +75,55 @@ body {
 
 .dark .recharts-legend-item {
   color: #cbd5e1 !important;
+}
+
+/* Responsive Chart Text Sizing */
+.recharts-text {
+  font-size: 10px;
+}
+
+@media (min-width: 640px) {
+  .recharts-text {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .recharts-text {
+    font-size: 14px;
+  }
+}
+
+/* Touch-friendly tooltip */
+.recharts-tooltip-wrapper {
+  pointer-events: auto !important;
+}
+
+/* Mobile-optimized modal */
+@media (max-width: 640px) {
+  .modal-content {
+    margin: 4px;
+    border-radius: 12px;
+  }
+}
+
+/* Prevent zoom on input focus on iOS */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+textarea,
+select {
+  font-size: 16px;
+}
+
+@media (min-width: 640px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 14px;
+  }
 }
 
 /* Custom scrollbar */

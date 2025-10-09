@@ -217,24 +217,25 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-4 lg:px-0">
-      {/* Multi-Select Filter Bar - Mobile Optimized */}
-      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 overflow-visible relative" style={{ zIndex: 1 }}>
-        {/* Filter Header */}
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6 px-1 sm:px-2 lg:px-0">
+      {/* Multi-Select Filter Bar - Enhanced Mobile */}
+      <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 overflow-visible relative shadow-sm" style={{ zIndex: 1 }}>
+        {/* Filter Header - Mobile Friendly */}
         <div className="flex items-center justify-between mb-3 sm:mb-4">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
             </svg>
-            Filters
+            <span className="hidden sm:inline">Filters</span>
+            <span className="sm:hidden">🔍</span>
           </h3>
-          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full max-w-[140px] sm:max-w-none truncate">
             {getActiveFiltersText()}
           </span>
         </div>
 
-        {/* Filters Grid - Responsive Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+        {/* Filters Grid - Mobile-First Responsive Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
           {/* Tenure Filter */}
           <div className="w-full">
             <MultiSelectFilter
@@ -373,9 +374,9 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
           </div>
         </div>
 
-        {/* Clear All Filters Button */}
+        {/* Clear All Filters Button - Mobile Enhanced */}
         {(selectedTenure.length > 0 || selectedStore.length > 0 || selectedAreaManager.length > 0 || selectedTrainer.length > 0 || selectedCourse.length > 0 || selectedDesignation.length > 0) && (
-          <div className="flex justify-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-center mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={() => {
                 setSelectedTenure([]);
@@ -390,12 +391,13 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
                 setCourseSearch('');
                 setDesignationSearch('');
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200 shadow-md hover:shadow-lg"
+              className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg sm:rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 touch-manipulation"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-              Clear All Filters
+              <span className="hidden sm:inline">Clear All Filters</span>
+              <span className="sm:hidden">Clear</span>
             </button>
           </div>
         )}
@@ -418,138 +420,138 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
         </div>
       )}
 
-      {/* Stats Grid - Mobile Optimized */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 px-2 sm:px-0">
+      {/* Stats Grid - Enhanced Mobile Layout */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 px-1 sm:px-0">
         {/* Total Employees Card */}
         <div 
           onClick={() => handleStatCardClick('total')}
-          className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg border border-blue-200/50 dark:border-blue-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group"
+          className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-blue-200/50 dark:border-blue-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group active:scale-95 touch-manipulation"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg sm:rounded-xl group-hover:from-blue-500/20 group-hover:to-indigo-500/20 transition-all duration-300">
-              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-md sm:rounded-lg lg:rounded-xl group-hover:from-blue-500/20 group-hover:to-indigo-500/20 transition-all duration-300">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">{totalEmployees}</p>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Employees</p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Tap for details</p>
+            <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{totalEmployees}</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 leading-tight">Total<br className="sm:hidden" /><span className="hidden sm:inline"> </span>Employees</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 hidden sm:block">Tap for details</p>
           </div>
         </div>
 
         {/* High Performers Card */}
         <div 
           onClick={() => handleStatCardClick('high')}
-          className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg border border-green-200/50 dark:border-green-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group"
+          className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-green-200/50 dark:border-green-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group active:scale-95 touch-manipulation"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg sm:rounded-xl group-hover:from-green-500/20 group-hover:to-emerald-500/20 transition-all duration-300">
-              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-md sm:rounded-lg lg:rounded-xl group-hover:from-green-500/20 group-hover:to-emerald-500/20 transition-all duration-300">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">{highPerformers.length}</p>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 text-center">High Performers<br className="sm:hidden" /><span className="hidden sm:inline"> </span>(≥80%)</p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Tap for details</p>
+            <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{highPerformers.length}</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 text-center leading-tight">High<br className="sm:hidden" /><span className="hidden sm:inline"> </span>Performers<br className="hidden sm:block" /><span className="hidden sm:inline">(≥80%)</span></p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 hidden sm:block">Tap for details</p>
           </div>
         </div>
 
         {/* Average Performers Card */}
         <div 
           onClick={() => handleStatCardClick('average')}
-          className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg border border-yellow-200/50 dark:border-yellow-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group"
+          className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-yellow-200/50 dark:border-yellow-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group active:scale-95 touch-manipulation"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-lg sm:rounded-xl group-hover:from-yellow-500/20 group-hover:to-orange-500/20 transition-all duration-300">
-              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-md sm:rounded-lg lg:rounded-xl group-hover:from-yellow-500/20 group-hover:to-orange-500/20 transition-all duration-300">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">{averagePerformers.length}</p>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 text-center">Average Performers<br className="sm:hidden" /><span className="hidden sm:inline"> </span>(60-79%)</p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Tap for details</p>
+            <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{averagePerformers.length}</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 text-center leading-tight">Average<br className="sm:hidden" /><span className="hidden sm:inline"> </span>Performers<br className="hidden sm:block" /><span className="hidden sm:inline">(60-79%)</span></p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 hidden sm:block">Tap for details</p>
           </div>
         </div>
 
         {/* Needs Attention Card */}
         <div 
           onClick={() => handleStatCardClick('needs-attention')}
-          className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg border border-red-200/50 dark:border-red-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group"
+          className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-red-200/50 dark:border-red-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group active:scale-95 touch-manipulation"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-br from-red-500/10 to-pink-500/10 rounded-lg sm:rounded-xl group-hover:from-red-500/20 group-hover:to-pink-500/20 transition-all duration-300">
-              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-red-500/10 to-pink-500/10 rounded-md sm:rounded-lg lg:rounded-xl group-hover:from-red-500/20 group-hover:to-pink-500/20 transition-all duration-300">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">{needsAttention.length}</p>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 text-center">Needs Attention<br className="sm:hidden" /><span className="hidden sm:inline"> </span>(&lt;60%)</p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Tap for details</p>
+            <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{needsAttention.length}</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 text-center leading-tight">Needs<br className="sm:hidden" /><span className="hidden sm:inline"> </span>Attention<br className="hidden sm:block" /><span className="hidden sm:inline">(&lt;60%)</span></p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 hidden sm:block">Tap for details</p>
           </div>
         </div>
       </div>
 
-      {/* Tenure Analysis Charts - Mobile Optimized */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-        <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+      {/* Tenure Analysis Charts - Mobile Enhanced */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
           <TenureDistributionChart data={filteredData} />
         </div>
-        <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
           <TenureCompletionChart data={filteredData} />
         </div>
       </div>
 
       {/* Secondary Charts for Merged Data - Mobile Optimized */}
       {isMerged && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+          <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
             <RegionCompletionChart data={filteredData as MergedData[]} />
           </div>
-          <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+          <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
             <TrainerCompletionChart data={filteredData as MergedData[]} />
           </div>
-          <div className="lg:col-span-2 xl:col-span-3 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+          <div className="lg:col-span-2 xl:col-span-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
             <AreaManagerCompletionChart data={filteredData as MergedData[]} />
           </div>
         </div>
       )}
 
-      {/* Course Analysis Charts - Mobile Optimized */}
-      <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+      {/* Course Analysis Charts - Mobile Enhanced */}
+      <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
         <CourseCompletionChart data={filteredData} />
       </div>
       
-      {/* Designation Analysis Charts - Mobile Optimized */}
-      <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+      {/* Designation Analysis Charts - Mobile Enhanced */}
+      <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
         <DesignationCompletionChart data={filteredData} />
       </div>
       
       {isMerged && (
-        <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
           <StoreCompletionChart data={filteredData as MergedData[]} />
         </div>
       )}
       
-      {/* AI Insights Section - Mobile Optimized */}
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-indigo-200/50 dark:border-indigo-800/50">
+      {/* AI Insights Section - Mobile Enhanced */}
+      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-indigo-200/50 dark:border-indigo-800/50">
         <GeminiInsights data={filteredData} isMerged={isMerged} />
       </div>
 
-      {/* Stat Card Detail Modal - Mobile Optimized */}
+      {/* Stat Card Detail Modal - Enhanced Mobile */}
       {isStatModalOpen && selectedStatType && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-            {/* Modal Header - Mobile Optimized */}
-            <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-4 sm:p-6 rounded-t-xl sm:rounded-t-2xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-1 sm:p-2 lg:p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-2xl w-full max-w-6xl max-h-[98vh] sm:max-h-[95vh] lg:max-h-[90vh] overflow-y-auto">
+            {/* Modal Header - Enhanced Mobile */}
+            <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-3 sm:p-4 lg:p-6 rounded-t-lg sm:rounded-t-xl lg:rounded-t-2xl">
               <div className="flex items-start justify-between">
-                <div className="flex-1 pr-4">
-                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+                <div className="flex-1 pr-3 sm:pr-4">
+                  <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
                     {selectedStatType === 'total' && 'All Employees'}
                     {selectedStatType === 'high' && 'High Performers (≥80% Completion)'}
                     {selectedStatType === 'average' && 'Average Performers (60-79% Completion)'}
                     {selectedStatType === 'needs-attention' && 'Needs Attention (<60% Completion)'}
                   </h2>
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 mt-1">
                     {selectedStatType === 'total' && `${employeeCompletionRates.length} total employees`}
                     {selectedStatType === 'high' && `${highPerformers.length} high performing employees`}
                     {selectedStatType === 'average' && `${averagePerformers.length} average performing employees`}
@@ -558,7 +560,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
                 </div>
                 <button
                   onClick={closeStatModal}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
+                  className="p-2 sm:p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0 touch-manipulation"
                 >
                   <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -567,17 +569,17 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
               </div>
             </div>
 
-            {/* Modal Content */}
-            <div className="p-6">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className={`p-4 rounded-xl ${
+            {/* Modal Content - Enhanced Mobile */}
+            <div className="p-3 sm:p-4 lg:p-6">
+              {/* Summary Cards - Mobile Responsive */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className={`p-3 sm:p-4 rounded-lg sm:rounded-xl ${
                   selectedStatType === 'high' ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' :
                   selectedStatType === 'average' ? 'bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20' :
                   selectedStatType === 'needs-attention' ? 'bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20' :
                   'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20'
                 }`}>
-                  <div className={`text-2xl font-bold ${
+                  <div className={`text-xl sm:text-2xl font-bold ${
                     selectedStatType === 'high' ? 'text-green-600 dark:text-green-400' :
                     selectedStatType === 'average' ? 'text-yellow-600 dark:text-yellow-400' :
                     selectedStatType === 'needs-attention' ? 'text-red-600 dark:text-red-400' :
@@ -588,11 +590,11 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
                     {selectedStatType === 'average' && averagePerformers.length}
                     {selectedStatType === 'needs-attention' && needsAttention.length}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Total Count</div>
+                  <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Count</div>
                 </div>
                 
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-3 sm:p-4 rounded-lg sm:rounded-xl">
+                  <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {selectedStatType === 'total' && `${getAverageCompletion(employeeCompletionRates)}%`}
                     {selectedStatType === 'high' && `${getAverageCompletion(highPerformers)}%`}
                     {selectedStatType === 'average' && `${getAverageCompletion(averagePerformers)}%`}
