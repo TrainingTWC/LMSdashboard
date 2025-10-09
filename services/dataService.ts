@@ -1,7 +1,7 @@
 // Configuration for Google Sheets Apps Script
 const GOOGLE_SHEETS_CONFIG = {
-  // Your deployed Google Apps Script web app URL
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzDYkBlieLjOSZmboqphGkEh09gE6d8AC_ZQZqqgvIJ1vdOjwosWcgj_EskFzz0Owi1sw/exec',
+  // Your deployed Google Apps Script web app URL (IMPROVED VERSION)
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbx30BwvNa8ytrOLRrOEZWbNQLeElEvU2QmuPl3dYQ1I6iACiIooe__6WdAsglxk514sUQ/exec',
   
   // Timeout for requests (in milliseconds)
   TIMEOUT: 30000,

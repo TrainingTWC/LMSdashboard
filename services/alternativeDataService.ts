@@ -20,22 +20,31 @@ export const availableDataSources: DataSource[] = [
     id: 'googleSheets',
     name: 'Google Sheets',
     type: 'googleSheets',
-    url: 'https://script.google.com/macros/s/AKfycbzDYkBlieLjOSZmboqphGkEh09gE6d8AC_ZQZqqgvIJ1vdOjwosWcgj_EskFzz0Owi1sw/exec',
+    url: 'https://script.google.com/macros/s/AKfycbx30BwvNa8ytrOLRrOEZWbNQLeElEvU2QmuPl3dYQ1I6iACiIooe__6WdAsglxk514sUQ/exec',
     description: 'Real-time data from Google Sheets via Apps Script',
     status: 'active'
   },
   {
-    id: 'publicCSV',
-    name: 'Public CSV URL',
+    id: 'githubJSON',
+    name: 'GitHub JSON',
     type: 'publicCSV',
-    description: 'Direct CSV file from a public URL (GitHub, CDN, etc.)',
-    status: 'configured'
+    url: 'https://trainingtwc.github.io/LMSdashboard/data/lms-completion.json',
+    description: 'JSON data file hosted on GitHub Pages (CORS-enabled)',
+    status: 'active'
+  },
+  {
+    id: 'githubCSV',
+    name: 'GitHub CSV (jsdelivr)',
+    type: 'publicCSV',
+    url: 'https://cdn.jsdelivr.net/gh/TrainingTWC/LMSdashboard@master/public/data/lms-completion.csv',
+    description: 'CSV file via jsdelivr CDN (CORS-enabled)',
+    status: 'active'
   },
   {
     id: 'cloudSync',
     name: 'Cloud Sync Upload',
     type: 'cloudSync',
-    description: 'Upload file that syncs across all devices',
+    description: 'Upload files that sync across all devices',
     status: 'configured'
   }
 ];
@@ -80,32 +89,51 @@ export async function fetchFromGoogleSheets(url: string): Promise<any[]> {
 }
 
 /**
- * Option 2: Public CSV URL (GitHub, CDN, etc.)
+ * Option 2: Public URL (JSON or CSV from GitHub, CDN, etc.)
  */
 export async function fetchFromPublicCSV(url: string): Promise<any[]> {
-  console.log('🔄 Fetching from Public CSV...');
+  console.log('🔄 Fetching from Public URL...');
   
   try {
+    const isJSON = url.includes('.json');
+    
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Accept': 'text/csv,text/plain,*/*',
+        'Accept': isJSON ? 'application/json' : 'text/csv,text/plain,*/*',
         'Cache-Control': 'no-cache'
-      }
+      },
+      mode: 'cors'
     });
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
-    const csvText = await response.text();
-    const data = parseCSVToJSON(csvText);
+    let data: any[];
     
-    console.log(`✅ Public CSV: ${data.length} records`);
+    if (isJSON) {
+      // Handle JSON response
+      const jsonData = await response.json();
+      
+      if (Array.isArray(jsonData)) {
+        data = jsonData;
+      } else if (jsonData.data && Array.isArray(jsonData.data)) {
+        data = jsonData.data;
+      } else {
+        throw new Error('Invalid JSON format - expected array of records');
+      }
+    } else {
+      // Handle CSV response
+      const csvText = await response.text();
+      data = parseCSVToJSON(csvText);
+    }
+    
+    console.log(`✅ Public URL (${isJSON ? 'JSON' : 'CSV'}): ${data.length} records`);
     return data;
     
   } catch (error) {
-    console.error('❌ Public CSV error:', error);
+    console.error('❌ Public URL error:', error);
     throw error;
   }
 }
@@ -145,12 +173,14 @@ export async function fetchTrainingDataWithFallback(): Promise<{
 }> {
   const timestamp = new Date().toISOString();
   
-  // Try Google Sheets first
+  // Try each active data source in order
   for (const source of availableDataSources) {
     if (source.status !== 'active') continue;
     
     try {
       let data: any[] = [];
+      
+      console.log(`🔄 Trying ${source.name}...`);
       
       switch (source.type) {
         case 'googleSheets':
@@ -177,6 +207,8 @@ export async function fetchTrainingDataWithFallback(): Promise<{
           source: source.name,
           timestamp
         };
+      } else {
+        console.warn(`⚠️ ${source.name} returned no data`);
       }
       
     } catch (error) {
