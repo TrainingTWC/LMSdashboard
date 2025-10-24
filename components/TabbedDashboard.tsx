@@ -39,28 +39,28 @@ const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ data, fileName, isMer
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Compact Tab Navigation */}
-        <div className="mb-8">
-          <div className="flex items-center gap-1 p-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm inline-flex">
+      <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 lg:py-8">
+        {/* Mobile-Optimized Tab Navigation */}
+        <div className="mb-3 sm:mb-6 lg:mb-8">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm sm:inline-flex sm:gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 text-sm whitespace-nowrap
+                  flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-md sm:rounded-lg font-medium transition-all duration-200 text-xs sm:text-sm touch-manipulation
                   ${activeTab === tab.id
                     ? 'bg-indigo-600 text-white shadow-md'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 hover:text-indigo-600 dark:hover:text-indigo-400'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 active:scale-95'
                   }
                 `}
               >
-                <span className="w-4 h-4">
+                <span className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0">
                   {tab.icon}
                 </span>
-                <div className="flex flex-col items-start">
-                  <span className="font-semibold leading-tight">{tab.name}</span>
-                  <span className={`text-xs leading-tight ${
+                <div className="flex flex-col items-start min-w-0">
+                  <span className="font-semibold leading-tight truncate">{tab.name}</span>
+                  <span className={`text-xs leading-tight hidden sm:block ${
                     activeTab === tab.id ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'
                   }`}>
                     {tab.description}
@@ -86,14 +86,14 @@ const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ data, fileName, isMer
           )}
         </div>
 
-        {/* Data Info Footer */}
-        <div className="mt-12 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-full border border-slate-200/50 dark:border-slate-700/50">
-            <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Data Info Footer - Mobile Optimized */}
+        <div className="mt-6 sm:mt-8 lg:mt-12 text-center px-2">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-full border border-slate-200/50 dark:border-slate-700/50">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {fileName} • {data.length} records • {isMerged ? 'Enhanced with store data' : 'Basic training data'}
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate max-w-[280px] sm:max-w-none">
+              <span className="hidden sm:inline">{fileName} • </span>{data.length} records<span className="hidden lg:inline"> • {isMerged ? 'Enhanced' : 'Basic'}</span>
             </span>
           </div>
         </div>

@@ -250,77 +250,78 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 text-slate-800 dark:text-slate-200 transition-colors duration-300">
-      <div className="container mx-auto px-6 py-8 max-w-7xl">
-        <header className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-slate-200/50 dark:border-slate-700/50">
+      <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-3 sm:py-6 lg:py-8 max-w-7xl">
+        <header className="mb-4 sm:mb-6 lg:mb-8 flex flex-col gap-3 sm:gap-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
           <div className="flex-1 min-w-0">
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-brand-primary via-teal-500 to-emerald-500 bg-clip-text text-transparent mb-2 leading-tight">LMS Completion Dashboard</h1>
-            <p className="text-slate-600 dark:text-slate-400 text-base sm:text-lg leading-relaxed">Comprehensive analytics for learning management completion tracking</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold bg-gradient-to-r from-brand-primary via-teal-500 to-emerald-500 bg-clip-text text-transparent mb-1 sm:mb-2 leading-tight">LMS Completion Dashboard</h1>
+            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm lg:text-base leading-relaxed">Comprehensive analytics for learning management completion tracking</p>
             
-            {/* Data Source Indicator */}
+            {/* Data Source Indicator - Mobile Optimized */}
             {data && (
-              <div className="mt-3 flex items-center space-x-2 text-sm">
-                <div className={`w-2 h-2 rounded-full ${
+              <div className="mt-2 sm:mt-3 flex items-center space-x-2 text-xs sm:text-sm">
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                   dataSource === 'googleSheets' ? 'bg-green-500' : 'bg-gray-400'
                 }`}></div>
-                <span className="text-slate-500 dark:text-slate-400">
+                <span className="text-slate-500 dark:text-slate-400 truncate">
                   Data source: {
                     dataSource === 'googleSheets' ? '📊 Google Sheets' :
-                    '� No Data Available'
-                  } • {fileName}
+                    '📁 GitHub JSON'
+                  }
+                  <span className="hidden sm:inline"> • {fileName}</span>
                 </span>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {/* Reload Data Button */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-end">
+            {/* Reload Data Button - Mobile Optimized */}
             <button
               onClick={handleReload}
               disabled={isLoading}
-              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-slate-700 dark:text-slate-300 font-semibold py-3 px-4 rounded-xl transition-all duration-300 shadow-lg border border-slate-200/50 dark:border-slate-700/50 hover:shadow-xl hover:scale-105 disabled:hover:scale-100 flex items-center gap-2"
+              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-slate-700 dark:text-slate-300 font-semibold py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg sm:rounded-xl transition-all duration-300 shadow-md border border-slate-200/50 dark:border-slate-700/50 hover:shadow-lg active:scale-95 disabled:active:scale-100 flex items-center gap-1.5 sm:gap-2 touch-manipulation"
               aria-label="Reload data"
             >
               {isLoading ? (
                 <>
-                  <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  <span className="hidden sm:inline">Loading...</span>
+                  <span className="hidden lg:inline text-sm">Loading...</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  <span className="hidden sm:inline">Reload Data</span>
+                  <span className="hidden lg:inline text-sm">Reload</span>
                 </>
               )}
             </button>
 
-            {/* Admin Access Button */}
+            {/* Admin Access Button - Mobile Optimized */}
             {!isAdmin && (
               <button
                 onClick={() => setShowAdminPanel(true)}
-                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 p-3 rounded-xl transition-all duration-300 shadow-lg border border-slate-200/50 dark:border-slate-700/50 hover:shadow-xl hover:scale-105 group"
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 shadow-md border border-slate-200/50 dark:border-slate-700/50 hover:shadow-lg active:scale-95 group touch-manipulation"
                 aria-label="Admin access"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </button>
             )}
 
-            {/* Admin Panel Button */}
+            {/* Admin Panel Button - Mobile Optimized */}
             {isAdmin && (
               <button
                 onClick={() => setShowAdminPanel(true)}
-                className="bg-orange-500/90 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2"
+                className="bg-orange-500/90 hover:bg-orange-600 text-white font-semibold py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg sm:rounded-xl transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 flex items-center gap-1.5 sm:gap-2 touch-manipulation"
                 aria-label="Admin panel"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span className="hidden sm:inline">Admin Panel</span>
+                <span className="hidden lg:inline text-sm">Admin</span>
               </button>
             )}
 
