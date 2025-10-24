@@ -35,7 +35,6 @@ const GeminiInsights: React.FC<GeminiInsightsProps> = ({ data, isMerged }) => {
   const [insights, setInsights] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [usePreGenerated, setUsePreGenerated] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchInsights = async () => {
@@ -43,38 +42,59 @@ const GeminiInsights: React.FC<GeminiInsightsProps> = ({ data, isMerged }) => {
       setError(null);
       
       // Try to load pre-generated insights first (for GitHub Pages)
-      if (usePreGenerated) {
-        try {
-          const response = await fetch('/insights.json');
-          if (response.ok) {
-            const preGenerated = await response.json();
-            setInsights(preGenerated.insights);
-            setIsLoading(false);
-            console.log('✅ Loaded pre-generated insights from GitHub Actions');
-            return;
-          }
-        } catch (e) {
-          console.log('ℹ️ No pre-generated insights found, trying live generation...');
+      try {
+        const response = await fetch('/insights.json');
+        if (response.ok) {
+          const preGenerated = await response.json();
+          setInsights(preGenerated.insights);
+          setIsLoading(false);
+          console.log('✅ Loaded pre-generated insights from GitHub Actions');
+          return;
         }
+      } catch (e) {
+        console.log('ℹ️ No pre-generated insights found');
       }
       
-      // Fall back to live generation (requires proxy server)
-      try {
-        const result = await generateDashboardInsights(data, isMerged);
-        setInsights(result);
-      } catch (e) {
-        setError("Failed to generate AI insights.");
-        console.error(e);
-      } finally {
-        setIsLoading(false);
-      }
+      // If no pre-generated insights, show a helpful message instead of trying live generation
+      setIsLoading(false);
+      setInsights(`## 🤖 AI Insights Coming Soon!
+
+**Pre-generated insights are not available yet.**
+
+### How to Generate Insights:
+
+**Option 1: Automatic (Recommended)**
+- Insights will be automatically generated when you push code changes to GitHub
+- The GitHub Actions workflow runs daily at midnight UTC
+- Check the **Actions** tab in your repository to see the workflow status
+
+**Option 2: Manual Trigger**
+1. Go to your repository on GitHub
+2. Click the **Actions** tab
+3. Select **Generate AI Insights** workflow
+4. Click **Run workflow** → **Run workflow**
+5. Wait 1-2 minutes for completion
+6. Refresh this page to see the insights
+
+**Option 3: Live Generation (Advanced)**
+If you want real-time insights generation:
+- Set up a proxy server (see AI_SETUP_GUIDE.md)
+- Or use Vercel serverless functions
+
+### ℹ️ Why Pre-Generated?
+Pre-generated insights are:
+- ✅ **Faster** - Load instantly from your site
+- ✅ **Free** - No external services needed
+- ✅ **Reliable** - Always available once generated
+
+**Note:** The first insights generation happens automatically after you push this update to GitHub!`);
     };
 
     if (data.length > 0) {
       fetchInsights();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, isMerged, usePreGenerated]);
+  }, [data, isMerged]);
 
   return (
     <div>
