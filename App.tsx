@@ -37,6 +37,7 @@ const App: React.FC = () => {
   });
 
   // Apply theme changes without reloading data
+  // Apply theme changes without reloading data
   useEffect(() => {
     // Apply the theme to the document
     if (theme === 'dark') {
@@ -46,6 +47,8 @@ const App: React.FC = () => {
     }
     // Save theme preference
     localStorage.setItem('theme', theme);
+  }, [theme]);
+
   // Initialize on component mount only - check admin session, URL params, and auto-load data
   useEffect(() => {
     // Check for employee_id or manager_id in URL parameters
@@ -74,8 +77,6 @@ const App: React.FC = () => {
     
     // Auto-load data with persistence service
     autoLoadData();
-  }, []); // Empty dependency array means this runs only once on mount
-  }, []); // Empty dependency array means this runs only once on mount
   }, []); // Empty dependency array means this runs only once on mount
 
   const toggleTheme = () => {
