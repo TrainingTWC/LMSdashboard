@@ -59,9 +59,9 @@ async function generateInsights() {
 
     console.log('🤖 Calling Gemini API...');
     
-    // Call Gemini API
+    // Call Gemini API (using gemini-1.5-flash - the free model)
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
