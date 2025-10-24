@@ -52,18 +52,21 @@ const App: React.FC = () => {
   const detectRole = (id: string, dataToCheck: (EmployeeTrainingRecord | MergedData)[]): 'employee' | 'manager' | 'trainer' | null => {
     if (!id || !dataToCheck || dataToCheck.length === 0) return null;
     
+    // Normalize ID to lowercase for case-insensitive comparison
+    const normalizedId = id.toLowerCase();
+    
     // Check if ID exists as an employee
-    const isEmployee = dataToCheck.some(record => record.employee_code === id);
+    const isEmployee = dataToCheck.some(record => record.employee_code.toLowerCase() === normalizedId);
     
     // Check if ID has people reporting to them (manager)
-    const isManager = dataToCheck.some(record => record.reporting_manager_code === id);
+    const isManager = dataToCheck.some(record => record.reporting_manager_code.toLowerCase() === normalizedId);
     
     // Check if ID exists in store mapping as trainer or leadership role
     const isTrainer = storeMappingData.some(store => 
-      store.Trainer === id || 
-      store['E-Learning Specialist'] === id || 
-      store['Training Head'] === id || 
-      store['HR Head'] === id
+      store.Trainer.toLowerCase() === normalizedId || 
+      store['E-Learning Specialist'].toLowerCase() === normalizedId || 
+      store['Training Head'].toLowerCase() === normalizedId || 
+      store['HR Head'].toLowerCase() === normalizedId
     );
     
     // Priority: Employee > Manager > Trainer

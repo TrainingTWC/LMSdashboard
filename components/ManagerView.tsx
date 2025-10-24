@@ -20,16 +20,20 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
     const allReports = new Set<string>();
     const employeeMap = new Map<string, EmployeeTrainingRecord | MergedData>();
     
+    // Normalize manager code for case-insensitive comparison
+    const normalizedManagerCode = managerCode.toLowerCase();
+    
     // Create a map of all employees
     data.forEach(record => {
-      employeeMap.set(record.employee_code, record);
+      employeeMap.set(record.employee_code.toLowerCase(), record);
     });
 
     // Recursive function to find all subordinates
     const findAllSubordinates = (managerId: string) => {
+      const normalizedManagerId = managerId.toLowerCase();
       data.forEach(record => {
-        if (record.reporting_manager_code === managerId && !allReports.has(record.employee_code)) {
-          allReports.add(record.employee_code);
+        if (record.reporting_manager_code.toLowerCase() === normalizedManagerId && !allReports.has(record.employee_code.toLowerCase())) {
+          allReports.add(record.employee_code.toLowerCase());
           // Recursively find this employee's subordinates
           findAllSubordinates(record.employee_code);
         }
@@ -37,15 +41,15 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
     };
 
     // Start with direct reports
-    findAllSubordinates(managerCode);
+    findAllSubordinates(normalizedManagerCode);
 
     // Filter data for all team members
-    return data.filter(record => allReports.has(record.employee_code));
+    return data.filter(record => allReports.has(record.employee_code.toLowerCase()));
   }, [data, managerCode]);
 
   // Get manager info
   const managerInfo = useMemo(() => {
-    return data.find(record => record.employee_code === managerCode);
+    return data.find(record => record.employee_code.toLowerCase() === managerCode.toLowerCase());
   }, [data, managerCode]);
 
   // Group by employee and calculate stats
@@ -142,8 +146,8 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
       );
     }
     
-    const directReports = filteredMembers.filter(emp => emp.reporting_manager_code === managerCode);
-    const indirectReports = filteredMembers.filter(emp => emp.reporting_manager_code !== managerCode);
+    const directReports = filteredMembers.filter(emp => emp.reporting_manager_code.toLowerCase() === managerCode.toLowerCase());
+    const indirectReports = filteredMembers.filter(emp => emp.reporting_manager_code.toLowerCase() !== managerCode.toLowerCase());
     
     // Apply level filter
     if (filterLevel === 'direct') {
@@ -391,7 +395,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                 }`}
               >
-                Direct ({teamMembers.filter(emp => emp.reporting_manager_code === managerCode).length})
+                Direct ({teamMembers.filter(emp => emp.reporting_manager_code.toLowerCase() === managerCode.toLowerCase()).length})
               </button>
               <button
                 onClick={() => setFilterLevel('indirect')}
@@ -543,7 +547,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3 flex-1">
                           <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold bg-gradient-to-br ${
-                            employee.reporting_manager_code === managerCode ? 'from-indigo-500 to-purple-500' : 'from-purple-500 to-pink-500'
+                            employee.reporting_manager_code.toLowerCase() === managerCode.toLowerCase() ? 'from-indigo-500 to-purple-500' : 'from-purple-500 to-pink-500'
                           }`}>
                             {employee.employee_name.charAt(0).toUpperCase()}
                           </div>

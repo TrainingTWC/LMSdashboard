@@ -16,7 +16,7 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
 
   // Filter data for this specific employee
   const employeeData = useMemo(() => {
-    return data.filter(record => record.employee_code === employeeCode);
+    return data.filter(record => record.employee_code.toLowerCase() === employeeCode.toLowerCase());
   }, [data, employeeCode]);
 
   // Get employee info

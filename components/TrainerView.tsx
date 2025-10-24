@@ -16,16 +16,18 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
 
   // Get trainer info and their stores
   const trainerInfo = useMemo(() => {
-    const stores = storeMappingData.filter(store => store.Trainer === trainerCode);
+    const normalizedTrainerCode = trainerCode.toLowerCase();
+    const stores = storeMappingData.filter(store => store.Trainer.toLowerCase() === normalizedTrainerCode);
     const storeIds = stores.map(s => s['Store ID']);
     return { stores, storeIds };
   }, [trainerCode]);
 
   // Check if this is E-Learning Specialist, Training Head, or HR Head (access to all data)
   const hasFullAccess = useMemo(() => {
-    const eLearningSpecialist = storeMappingData.find(s => s['E-Learning Specialist'] === trainerCode);
-    const trainingHead = storeMappingData.find(s => s['Training Head'] === trainerCode);
-    const hrHead = storeMappingData.find(s => s['HR Head'] === trainerCode);
+    const normalizedTrainerCode = trainerCode.toLowerCase();
+    const eLearningSpecialist = storeMappingData.find(s => s['E-Learning Specialist'].toLowerCase() === normalizedTrainerCode);
+    const trainingHead = storeMappingData.find(s => s['Training Head'].toLowerCase() === normalizedTrainerCode);
+    const hrHead = storeMappingData.find(s => s['HR Head'].toLowerCase() === normalizedTrainerCode);
     return !!(eLearningSpecialist || trainingHead || hrHead);
   }, [trainerCode]);
 
