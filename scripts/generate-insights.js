@@ -17,14 +17,27 @@ async function generateInsights() {
   }
 
   try {
-    // Read your training data
-    const dataPath = path.join(__dirname, '../public/data/training-data.json');
+    // Read your training data - try multiple possible locations
+    let dataPath = path.join(__dirname, '../public/data/lms-completion.json');
+    
+    if (!fs.existsSync(dataPath)) {
+      dataPath = path.join(__dirname, '../public/data/training-data.json');
+    }
+    
+    if (!fs.existsSync(dataPath)) {
+      dataPath = path.join(__dirname, '../data/lms-completion.json');
+    }
     
     if (!fs.existsSync(dataPath)) {
       console.log('⚠️ No training data found, skipping insights generation');
+      console.log('Tried locations:');
+      console.log('  - public/data/lms-completion.json');
+      console.log('  - public/data/training-data.json');
+      console.log('  - data/lms-completion.json');
       return;
     }
 
+    console.log(`📂 Found data at: ${dataPath}`);
     const data = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
     
     // Generate summary (same logic as geminiService.ts)
