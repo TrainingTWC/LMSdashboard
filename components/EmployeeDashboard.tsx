@@ -18,6 +18,9 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
   const [selectedTenure, setSelectedTenure] = useState<string[]>([]);
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   
+  // Filter collapse state for mobile
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState<boolean>(false);
+  
   // Search states
   const [storeSearch, setStoreSearch] = useState<string>('');
   const [areaManagerSearch, setAreaManagerSearch] = useState<string>('');
@@ -234,8 +237,11 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
       let calculatedProgress = 0;
       if (record.course_completion_status === 'Completed') {
         calculatedProgress = 100;
-      } else if (record.course_progress && !isNaN(parseFloat(record.course_progress))) {
-        calculatedProgress = parseFloat(record.course_progress);
+      } else if (record.course_progress != null) {
+        const progressValue = typeof record.course_progress === 'number' 
+          ? record.course_progress 
+          : parseFloat(String(record.course_progress));
+        calculatedProgress = !isNaN(progressValue) ? progressValue : 50;
       } else {
         // If no progress data and not completed, assume in progress
         calculatedProgress = 50;
@@ -292,10 +298,66 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
   const averagePerformers = filteredEmployees.filter(emp => emp.completionRate >= 60 && emp.completionRate < 80);
   const needsAttention = filteredEmployees.filter(emp => emp.completionRate < 60);
 
+  // Get active filters text
+  const getActiveFiltersText = () => {
+    const activeFilters: string[] = [];
+    if (selectedStores.length > 0) {
+      activeFilters.push(`Store: ${selectedStores.length === 1 ? selectedStores[0] : `${selectedStores.length} selected`}`);
+    }
+    if (selectedAreaManagers.length > 0) {
+      activeFilters.push(`Area Manager: ${selectedAreaManagers.length === 1 ? selectedAreaManagers[0] : `${selectedAreaManagers.length} selected`}`);
+    }
+    if (selectedTrainers.length > 0) {
+      activeFilters.push(`Trainer: ${selectedTrainers.length === 1 ? selectedTrainers[0] : `${selectedTrainers.length} selected`}`);
+    }
+    if (selectedDesignations.length > 0) {
+      activeFilters.push(`Designation: ${selectedDesignations.length === 1 ? selectedDesignations[0] : `${selectedDesignations.length} selected`}`);
+    }
+    if (selectedTenure.length > 0) {
+      activeFilters.push(`Tenure: ${selectedTenure.length === 1 ? selectedTenure[0] : `${selectedTenure.length} selected`}`);
+    }
+    if (selectedCourses.length > 0) {
+      activeFilters.push(`Course: ${selectedCourses.length === 1 ? selectedCourses[0] : `${selectedCourses.length} selected`}`);
+    }
+    
+    if (activeFilters.length === 0) return 'All Data';
+    if (activeFilters.length === 1) return activeFilters[0];
+    return `${activeFilters.length} Filters Applied`;
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Multi-Select Filters */}
-      <div className="flex flex-wrap gap-4 items-start bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/50 dark:border-slate-700/50 overflow-visible relative" style={{ zIndex: 10 }}>
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6 px-1 sm:px-2 lg:px-0">
+      {/* Multi-Select Filters - Collapsible */}
+      <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 overflow-visible relative shadow-sm" style={{ zIndex: 10 }}>
+        {/* Filter Header - Mobile Friendly with Toggle */}
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <button 
+            onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
+            className="flex items-center gap-2 lg:cursor-default touch-manipulation active:scale-95 lg:active:scale-100"
+          >
+            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+              </svg>
+              <span className="hidden sm:inline">Filters</span>
+              <span className="sm:hidden">Filters</span>
+            </h3>
+            <svg 
+              className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 lg:hidden ${isFiltersExpanded ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full max-w-[120px] sm:max-w-[180px] lg:max-w-none truncate">
+            {getActiveFiltersText()}
+          </span>
+        </div>
+
+        {/* Filters Grid - Collapsible on Mobile */}
+        <div className={`flex flex-wrap gap-4 items-start overflow-hidden transition-all duration-300 ${isFiltersExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 lg:max-h-[2000px] lg:opacity-100'}`}>
         {/* Store Filter */}
         {isMerged && (
           <MultiSelectFilter
@@ -445,13 +507,14 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
             Clear All Filters
           </button>
         )}
+        </div>
       </div>
 
-      {/* Search and Sort Section */}
-      <div className="flex flex-wrap gap-4 items-center bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-slate-200/30 dark:border-slate-700/30">
+      {/* Search and Sort Section - Mobile Optimized */}
+      <div className="flex flex-wrap gap-3 sm:gap-4 items-center bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-700/30">
         {/* Search Employee */}
-        <div className="flex-1 min-w-[250px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div className="flex-1 min-w-full sm:min-w-[250px]">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
             Search Employee
           </label>
           <input
@@ -459,34 +522,34 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
             value={searchEmployee}
             onChange={(e) => setSearchEmployee(e.target.value)}
             placeholder="Search by name or employee code..."
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
         {/* Sort Options */}
-        <div className="flex gap-2">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex-1 sm:flex-initial">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
               Sort by
             </label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'name' | 'completion' | 'designation')}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="name">Name</option>
               <option value="completion">Completion Rate</option>
               <option value="designation">Designation</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <div className="flex-1 sm:flex-initial">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
               Order
             </label>
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="asc">Ascending</option>
               <option value="desc">Descending</option>

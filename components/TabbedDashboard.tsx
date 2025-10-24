@@ -85,18 +85,6 @@ const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ data, fileName, isMer
             </div>
           )}
         </div>
-
-        {/* Data Info Footer - Mobile Optimized */}
-        <div className="mt-6 sm:mt-8 lg:mt-12 text-center px-2">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-full border border-slate-200/50 dark:border-slate-700/50">
-            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate max-w-[280px] sm:max-w-none">
-              <span className="hidden sm:inline">{fileName} • </span>{data.length} records<span className="hidden lg:inline"> • {isMerged ? 'Enhanced' : 'Basic'}</span>
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   );

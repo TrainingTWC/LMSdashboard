@@ -1,8 +1,7 @@
-
 import type { EmployeeTrainingRecord, MergedData } from '../types';
 
-// Use proxy server instead of direct API calls
-const PROXY_SERVER_URL = 'http://localhost:3002';
+// Use environment variable for proxy server URL, with fallback to localhost
+const PROXY_SERVER_URL = import.meta.env.VITE_PROXY_SERVER_URL || 'http://localhost:3002';
 
 // FIX: Corrected a syntax error in the function declaration. It should be `const functionName = ...`.
 const _create_summary = (data: (EmployeeTrainingRecord | MergedData)[], isMerged: boolean) => {
@@ -95,7 +94,7 @@ export const generateDashboardInsights = async (data: (EmployeeTrainingRecord | 
         }
 
         // Call the proxy server
-        const response = await fetch(`${PROXY_SERVER_URL}/api/insights`, {
+        const response = await fetch(`${PROXY_SERVER_URL}/api/gemini`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -30,7 +30,7 @@ const App: React.FC = () => {
     return 'light';
   });
 
-  // Initialize theme on component mount, check admin session, and auto-load CSV data
+  // Apply theme changes without reloading data
   useEffect(() => {
     // Apply the theme to the document
     if (theme === 'dark') {
@@ -40,13 +40,16 @@ const App: React.FC = () => {
     }
     // Save theme preference
     localStorage.setItem('theme', theme);
-    
+  }, [theme]);
+
+  // Initialize on component mount only - check admin session and auto-load data
+  useEffect(() => {
     // Check admin session
     checkAdminSession();
     
     // Auto-load data with persistence service
     autoLoadData();
-  }, [theme]);
+  }, []); // Empty dependency array means this runs only once on mount
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
@@ -255,22 +258,6 @@ const App: React.FC = () => {
           <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold bg-gradient-to-r from-brand-primary via-teal-500 to-emerald-500 bg-clip-text text-transparent mb-1 sm:mb-2 leading-tight">LMS Completion Dashboard</h1>
             <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm lg:text-base leading-relaxed">Comprehensive analytics for learning management completion tracking</p>
-            
-            {/* Data Source Indicator - Mobile Optimized */}
-            {data && (
-              <div className="mt-2 sm:mt-3 flex items-center space-x-2 text-xs sm:text-sm">
-                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                  dataSource === 'googleSheets' ? 'bg-green-500' : 'bg-gray-400'
-                }`}></div>
-                <span className="text-slate-500 dark:text-slate-400 truncate">
-                  Data source: {
-                    dataSource === 'googleSheets' ? '📊 Google Sheets' :
-                    '📁 GitHub JSON'
-                  }
-                  <span className="hidden sm:inline"> • {fileName}</span>
-                </span>
-              </div>
-            )}
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-end">
             {/* Reload Data Button - Mobile Optimized */}

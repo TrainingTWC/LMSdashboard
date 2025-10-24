@@ -35,11 +35,30 @@ const GeminiInsights: React.FC<GeminiInsightsProps> = ({ data, isMerged }) => {
   const [insights, setInsights] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [usePreGenerated, setUsePreGenerated] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchInsights = async () => {
       setIsLoading(true);
       setError(null);
+      
+      // Try to load pre-generated insights first (for GitHub Pages)
+      if (usePreGenerated) {
+        try {
+          const response = await fetch('/insights.json');
+          if (response.ok) {
+            const preGenerated = await response.json();
+            setInsights(preGenerated.insights);
+            setIsLoading(false);
+            console.log('✅ Loaded pre-generated insights from GitHub Actions');
+            return;
+          }
+        } catch (e) {
+          console.log('ℹ️ No pre-generated insights found, trying live generation...');
+        }
+      }
+      
+      // Fall back to live generation (requires proxy server)
       try {
         const result = await generateDashboardInsights(data, isMerged);
         setInsights(result);
@@ -55,7 +74,7 @@ const GeminiInsights: React.FC<GeminiInsightsProps> = ({ data, isMerged }) => {
       fetchInsights();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, isMerged]);
+  }, [data, isMerged, usePreGenerated]);
 
   return (
     <div>
