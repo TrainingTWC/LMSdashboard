@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { EmployeeTrainingRecord, MergedData } from '../types';
-import { generateDashboardInsights } from '../services/aiService';
+import { generateDashboardInsights } from '../services/geminiService';
 import { Spinner } from './Spinner';
 
 interface GeminiInsightsProps {
@@ -106,7 +106,7 @@ Pre-generated insights are:
         </div>
         <div>
           <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-200">AI-Powered Insights</h3>
-          <p className="text-slate-600 dark:text-slate-400">Intelligent analysis by OpenAI</p>
+          <p className="text-slate-600 dark:text-slate-400">Intelligent analysis by Gemini AI</p>
         </div>
       </div>
       {isLoading && (
@@ -117,7 +117,7 @@ Pre-generated insights are:
               <div className="w-8 h-8 border-2 border-brand-primary/30 rounded-full"></div>
             </div>
           </div>
-          <p className="mt-6 text-slate-600 dark:text-slate-400 text-lg font-medium">Generating insights with OpenAI...</p>
+          <p className="mt-6 text-slate-600 dark:text-slate-400 text-lg font-medium">Generating insights with Gemini AI...</p>
           <p className="mt-2 text-slate-500 dark:text-slate-500 text-sm">This may take a few moments</p>
         </div>
       )}
