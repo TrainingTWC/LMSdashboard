@@ -1,8 +1,12 @@
 // scripts/generate-insights.js
 // This script runs in GitHub Actions to pre-generate AI insights
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function generateInsights() {
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
