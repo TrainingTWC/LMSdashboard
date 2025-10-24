@@ -3,7 +3,6 @@ import type { EmployeeTrainingRecord, MergedData } from '../types';
 import { storeMappingData } from '../data/storeMapping';
 import StatCard from './StatCard';
 import CompletionRateCard from './CompletionRateCard';
-import GeminiInsights from './GeminiInsights';
 import RegionCompletionChart from './RegionCompletionChart';
 import TrainerCompletionChart from './TrainerCompletionChart';
 import AreaManagerCompletionChart from './AreaManagerCompletionChart';
@@ -547,11 +546,6 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
           <StoreCompletionChart data={filteredData as MergedData[]} />
         </div>
       )}
-      
-      {/* AI Insights Section - Mobile Enhanced */}
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-indigo-200/50 dark:border-indigo-800/50">
-        <GeminiInsights data={filteredData} isMerged={isMerged} />
-      </div>
 
       {/* Stat Card Detail Modal - Enhanced Mobile */}
       {isStatModalOpen && selectedStatType && (
