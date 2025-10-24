@@ -6,11 +6,15 @@ on:
     paths:
       - 'public/data/**'
       - 'data/**'
+      - 'scripts/generate-insights.js'
   # Run manually
   workflow_dispatch:
   # Run on schedule (daily)
   schedule:
     - cron: '0 0 * * *'
+
+permissions:
+  contents: write
 
 jobs:
   generate-insights:
