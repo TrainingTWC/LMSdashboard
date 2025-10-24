@@ -24,7 +24,7 @@ const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
   const [dataSource, setDataSource] = useState<'googleSheets' | 'none'>('none');
-  const [userRole, setUserRole] = useState<'employee' | 'manager' | 'trainer' | 'admin'>('admin');
+  const [userRole, setUserRole] = useState<'employee' | 'manager' | 'trainer' | 'admin' | 'not-found'>('admin');
   const [userId, setUserId] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
@@ -102,8 +102,8 @@ const App: React.FC = () => {
       if (detectedRole) {
         setUserRole(detectedRole);
       } else {
-        // ID not found in any role, show admin view with error
-        setUserRole('admin');
+        // ID not found in any role, show error state without admin dashboard
+        setUserRole('not-found');
       }
     } else if (!userId) {
       setUserRole('admin');
@@ -434,22 +434,34 @@ const App: React.FC = () => {
                   <ManagerView data={data} managerCode={userId} isMerged={isMerged} />
                 ) : userRole === 'trainer' && userId ? (
                   <TrainerView data={data} trainerCode={userId} />
-                ) : (
-                  <>
-                    {userId && (
-                      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-6 shadow-xl mb-6">
-                        <div className="flex items-center mb-2">
-                          <span className="text-yellow-500 text-2xl mr-3">⚠️</span>
-                          <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">ID Not Found</h3>
-                        </div>
-                        <p className="text-yellow-700 dark:text-yellow-300">
-                          The ID "<strong>{userId}</strong>" was not found in the system as an employee, manager, or trainer.
-                          Please verify the ID and try again.
+                ) : userRole === 'not-found' && userId ? (
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-600 rounded-2xl p-8 shadow-2xl text-center max-w-2xl mx-auto">
+                    <div className="flex flex-col items-center">
+                      <span className="text-6xl mb-4">🔍</span>
+                      <h3 className="text-2xl font-bold text-yellow-900 dark:text-yellow-100 mb-3">ID Not Found</h3>
+                      <p className="text-yellow-700 dark:text-yellow-300 text-lg mb-6">
+                        The ID "<strong className="font-mono bg-yellow-100 dark:bg-yellow-800 px-2 py-1 rounded">{userId}</strong>" was not found in the system.
+                      </p>
+                      <div className="bg-white dark:bg-slate-800 rounded-lg p-4 text-left w-full mb-6">
+                        <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
+                          <strong>Please verify:</strong>
                         </p>
+                        <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1 list-disc list-inside">
+                          <li>The ID is correct and properly formatted</li>
+                          <li>The ID exists in the current dataset</li>
+                          <li>You have the correct access permissions</li>
+                        </ul>
                       </div>
-                    )}
-                    <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} />
-                  </>
+                      <button
+                        onClick={() => window.location.href = window.location.pathname}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
+                      >
+                        🏠 Return to Dashboard
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} />
                 )
               )}
             </>
