@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { csvParse } from 'd3-dsv';
 import type { EmployeeTrainingRecord, MergedData, StoreRecord } from './types';
 import TabbedDashboard from './components/TabbedDashboard';
+import EmployeeView from './components/EmployeeView';
 import AdminLogin from './components/AdminLogin';
 import AdminPanel from './components/AdminPanel';
 import { Spinner } from './components/Spinner';
@@ -21,6 +22,7 @@ const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
   const [dataSource, setDataSource] = useState<'googleSheets' | 'none'>('none');
+  const [employeeCode, setEmployeeCode] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
     if (typeof window !== 'undefined') {
@@ -41,14 +43,21 @@ const App: React.FC = () => {
     // Save theme preference
     localStorage.setItem('theme', theme);
   }, [theme]);
-
-  // Initialize on component mount only - check admin session and auto-load data
+  // Initialize on component mount only - check admin session, URL params, and auto-load data
   useEffect(() => {
+    // Check for employee_id in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const empId = urlParams.get('employee_id') || urlParams.get('emp_id') || urlParams.get('id');
+    if (empId) {
+      setEmployeeCode(empId);
+    }
+    
     // Check admin session
     checkAdminSession();
     
     // Auto-load data with persistence service
     autoLoadData();
+  }, []); // Empty dependency array means this runs only once on mount
   }, []); // Empty dependency array means this runs only once on mount
 
   const toggleTheme = () => {
@@ -352,13 +361,6 @@ const App: React.FC = () => {
           {/* Regular Dashboard Content */}
           {!showAdminPanel && (
             <>
-              {isLoading && (
-                <div className="flex flex-col items-center justify-center h-80 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/50 dark:border-slate-700/50">
-                  <Spinner />
-                  <p className="mt-6 text-slate-600 dark:text-slate-400 text-lg font-medium">Loading your training data...</p>
-                </div>
-              )}
-              
               {error && !isLoading && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl p-6 shadow-xl">
                   <div className="flex items-center mb-4">
@@ -369,6 +371,19 @@ const App: React.FC = () => {
                   <button
                     onClick={handleReload}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                  >
+                    🔄 Try Again
+                  </button>
+                </div>
+              )}
+              
+              {data && !isLoading && (
+                employeeCode ? (
+                  <EmployeeView data={data} employeeCode={employeeCode} isMerged={isMerged} />
+                ) : (
+                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} />
+                )
+              )}tion-colors duration-200"
                   >
                     🔄 Try Again
                   </button>
