@@ -69,9 +69,10 @@ const App: React.FC = () => {
       store['HR Head'].toLowerCase() === normalizedId
     );
     
-    // Priority: Employee > Manager > Trainer
-    if (isEmployee) return 'employee';
+    // Priority: Manager > Employee > Trainer
+    // If someone is a manager, show them the manager view (which includes their own completion)
     if (isManager) return 'manager';
+    if (isEmployee) return 'employee';
     if (isTrainer) return 'trainer';
     
     return null;
