@@ -4,6 +4,7 @@ import type { EmployeeTrainingRecord, MergedData, StoreRecord } from './types';
 import TabbedDashboard from './components/TabbedDashboard';
 import EmployeeView from './components/EmployeeView';
 import ManagerView from './components/ManagerView';
+import TrainerView from './components/TrainerView';
 import AdminLogin from './components/AdminLogin';
 import AdminPanel from './components/AdminPanel';
 import { Spinner } from './components/Spinner';
@@ -25,6 +26,7 @@ const App: React.FC = () => {
   const [dataSource, setDataSource] = useState<'googleSheets' | 'none'>('none');
   const [employeeCode, setEmployeeCode] = useState<string | null>(null);
   const [managerCode, setManagerCode] = useState<string | null>(null);
+  const [trainerCode, setTrainerCode] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
     if (typeof window !== 'undefined') {
@@ -59,6 +61,12 @@ const App: React.FC = () => {
     const mgrId = urlParams.get('manager_id') || urlParams.get('mgr_id') || urlParams.get('manager');
     if (mgrId) {
       setManagerCode(mgrId);
+    }
+    
+    // Check for trainer view
+    const trainerId = urlParams.get('trainer_id') || urlParams.get('trainer') || urlParams.get('t_id');
+    if (trainerId) {
+      setTrainerCode(trainerId);
     }
     
     // Check admin session
@@ -379,30 +387,25 @@ const App: React.FC = () => {
                   </div>
                   <p className="text-red-700 dark:text-red-300 mb-4">{error}</p>
                   <button
-              {data && !isLoading && (
-                employeeCode ? (
-                  <EmployeeView data={data} employeeCode={employeeCode} isMerged={isMerged} />
-                ) : managerCode ? (
-                  <ManagerView data={data} managerCode={managerCode} isMerged={isMerged} />
-                ) : (
-                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} />
-                )
-              )}
-              
-              {data && !isLoading && (
-                employeeCode ? (
-                  <EmployeeView data={data} employeeCode={employeeCode} isMerged={isMerged} />
-                ) : (
-                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} />
-                )
-              )}tion-colors duration-200"
+                    onClick={() => window.location.reload()}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
                   >
                     🔄 Try Again
                   </button>
                 </div>
               )}
               
-              {data && !isLoading && <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} />}
+              {data && !isLoading && (
+                employeeCode ? (
+                  <EmployeeView data={data} employeeCode={employeeCode} isMerged={isMerged} />
+                ) : managerCode ? (
+                  <ManagerView data={data} managerCode={managerCode} isMerged={isMerged} />
+                ) : trainerCode ? (
+                  <TrainerView data={data} trainerCode={trainerCode} />
+                ) : (
+                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} />
+                )
+              )}
             </>
           )}
         </main>

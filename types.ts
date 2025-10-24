@@ -29,6 +29,9 @@ export interface StoreRecord {
     Region: string;
     AM: string;
     Trainer: string;
+    'E-Learning Specialist'?: string;
+    'Training Head'?: string;
+    'HR Head'?: string;
 }
 
 export type MergedData = EmployeeTrainingRecord & Omit<StoreRecord, 'Store ID'>;
