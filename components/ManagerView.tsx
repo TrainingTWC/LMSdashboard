@@ -43,7 +43,10 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
     // Start with direct reports
     findAllSubordinates(normalizedManagerCode);
 
-    // Filter data for all team members
+    // Also add the manager themselves if their data exists
+    allReports.add(normalizedManagerCode);
+
+    // Filter data for all team members including manager
     return data.filter(record => allReports.has(record.employee_code.toLowerCase()));
   }, [data, managerCode]);
 
@@ -109,18 +112,21 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
     );
   }, [teamData, isMerged]);
 
-  // Calculate team stats
+  // Calculate team stats (excluding the manager themselves)
   const teamStats = useMemo(() => {
-    const totalMembers = teamMembers.length;
-    const totalCourses = teamMembers.reduce((sum, emp) => sum + emp.total_courses, 0);
-    const completedCourses = teamMembers.reduce((sum, emp) => sum + emp.completed_courses, 0);
-    const totalHours = teamMembers.reduce((sum, emp) => sum + (emp.total_hours || 0), 0);
+    // Filter out the manager from team members for stats
+    const subordinates = teamMembers.filter(emp => emp.employee_code.toLowerCase() !== managerCode.toLowerCase());
+    
+    const totalMembers = subordinates.length;
+    const totalCourses = subordinates.reduce((sum, emp) => sum + emp.total_courses, 0);
+    const completedCourses = subordinates.reduce((sum, emp) => sum + emp.completed_courses, 0);
+    const totalHours = subordinates.reduce((sum, emp) => sum + (emp.total_hours || 0), 0);
     const avgCompletionRate = totalMembers > 0
-      ? Math.round(teamMembers.reduce((sum, emp) => sum + emp.completion_rate, 0) / totalMembers)
+      ? Math.round(subordinates.reduce((sum, emp) => sum + emp.completion_rate, 0) / totalMembers)
       : 0;
     
-    const highPerformers = teamMembers.filter(emp => emp.completion_rate >= 80).length;
-    const needsAttention = teamMembers.filter(emp => emp.completion_rate < 60).length;
+    const highPerformers = subordinates.filter(emp => emp.completion_rate >= 80).length;
+    const needsAttention = subordinates.filter(emp => emp.completion_rate < 60).length;
 
     return {
       totalMembers,
@@ -131,7 +137,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
       highPerformers,
       needsAttention
     };
-  }, [teamMembers]);
+  }, [teamMembers, managerCode]);
 
   // Group team members by reporting level with filtering
   const teamLevels = useMemo(() => {
@@ -146,17 +152,21 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
       );
     }
     
-    const directReports = filteredMembers.filter(emp => emp.reporting_manager_code.toLowerCase() === managerCode.toLowerCase());
-    const indirectReports = filteredMembers.filter(emp => emp.reporting_manager_code.toLowerCase() !== managerCode.toLowerCase());
+    // Separate manager's own record from team members
+    const managerRecord = filteredMembers.find(emp => emp.employee_code.toLowerCase() === managerCode.toLowerCase());
+    const otherMembers = filteredMembers.filter(emp => emp.employee_code.toLowerCase() !== managerCode.toLowerCase());
+    
+    const directReports = otherMembers.filter(emp => emp.reporting_manager_code.toLowerCase() === managerCode.toLowerCase());
+    const indirectReports = otherMembers.filter(emp => emp.reporting_manager_code.toLowerCase() !== managerCode.toLowerCase());
     
     // Apply level filter
     if (filterLevel === 'direct') {
-      return { directReports, indirectReports: [] };
+      return { managerRecord, directReports, indirectReports: [] };
     } else if (filterLevel === 'indirect') {
-      return { directReports: [], indirectReports };
+      return { managerRecord, directReports: [], indirectReports };
     }
     
-    return { directReports, indirectReports };
+    return { managerRecord, directReports, indirectReports };
   }, [teamMembers, managerCode, searchTerm, filterLevel]);
 
   // Handle stat card clicks
@@ -395,7 +405,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                 }`}
               >
-                Direct ({teamMembers.filter(emp => emp.reporting_manager_code.toLowerCase() === managerCode.toLowerCase()).length})
+                Direct ({teamMembers.filter(emp => emp.reporting_manager_code.toLowerCase() === managerCode.toLowerCase() && emp.employee_code.toLowerCase() !== managerCode.toLowerCase()).length})
               </button>
               <button
                 onClick={() => setFilterLevel('indirect')}
@@ -405,11 +415,37 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                 }`}
               >
-                Indirect ({teamMembers.filter(emp => emp.reporting_manager_code !== managerCode).length})
+                Indirect ({teamMembers.filter(emp => emp.reporting_manager_code.toLowerCase() !== managerCode.toLowerCase() && emp.employee_code.toLowerCase() !== managerCode.toLowerCase()).length})
               </button>
             </div>
           </div>
         </div>
+
+        {/* Manager's Own Completion Section */}
+        {teamLevels.managerRecord && (
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border-2 border-blue-300 dark:border-blue-700">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 flex items-center gap-2">
+              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                My Completion
+              </span>
+            </h2>
+            
+            <div className="space-y-3">
+              <EmployeeCard
+                key={teamLevels.managerRecord.employee_code}
+                employee={teamLevels.managerRecord}
+                isExpanded={expandedEmployee === teamLevels.managerRecord.employee_code}
+                onToggle={() => setExpandedEmployee(expandedEmployee === teamLevels.managerRecord.employee_code ? null : teamLevels.managerRecord.employee_code)}
+                selectedCourse={selectedCourse}
+                onCourseClick={setSelectedCourse}
+                isDirect={true}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Direct Reports Section */}
         {teamLevels.directReports.length > 0 && (
