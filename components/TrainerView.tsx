@@ -101,7 +101,8 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
         emp.in_progress++;
       }
 
-      emp.total_hours += parseFloat((item as any).time_spent_hours || '0');
+      const hours = parseFloat((item as any).time_spent_hours || '0');
+      emp.total_hours += isNaN(hours) ? 0 : hours;
       emp.courses.push({
         course_name: item.course_name,
         course_category: item.course_category || 'General',
@@ -125,7 +126,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
     const totalMembers = employeeData.length;
     const totalCourses = employeeData.reduce((sum, emp) => sum + emp.total_courses, 0);
     const completedCourses = employeeData.reduce((sum, emp) => sum + emp.completed_courses, 0);
-    const totalHours = employeeData.reduce((sum, emp) => sum + emp.total_hours, 0);
+    const totalHours = employeeData.reduce((sum, emp) => sum + (emp.total_hours || 0), 0);
     const avgCompletionRate = totalMembers > 0 
       ? Math.round(employeeData.reduce((sum, emp) => sum + emp.completion_rate, 0) / totalMembers)
       : 0;
@@ -137,7 +138,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
       totalCourses,
       completedCourses,
       avgCompletionRate,
-      totalHours: Math.round(totalHours * 10) / 10,
+      totalHours: isNaN(totalHours) ? 0 : Math.round(totalHours * 10) / 10,
       highPerformers,
       needsAttention
     };
@@ -284,7 +285,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
                       </span>
                       <span className="flex items-center gap-1">
                         <span className="font-semibold text-gray-700 dark:text-gray-300">Hours:</span>
-                        <span className="text-gray-600 dark:text-gray-400">{employee.total_hours.toFixed(1)}h</span>
+                        <span className="text-gray-600 dark:text-gray-400">{isNaN(employee.total_hours) ? '0.0' : employee.total_hours.toFixed(1)}h</span>
                       </span>
                     </div>
                   </div>

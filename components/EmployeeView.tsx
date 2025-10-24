@@ -23,14 +23,17 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
     const totalCourses = employeeData.length;
     const completedCourses = employeeData.filter(d => d.course_completion_status === 'Completed').length;
     const completionRate = totalCourses > 0 ? (completedCourses / totalCourses) * 100 : 0;
-    const totalHours = employeeData.reduce((sum, d) => sum + (d.course_completion_hours || 0), 0);
+    const totalHours = employeeData.reduce((sum, d) => {
+      const hours = parseFloat(String(d.course_completion_hours || 0));
+      return sum + (isNaN(hours) ? 0 : hours);
+    }, 0);
     
     return {
       totalCourses,
       completedCourses,
       inProgress: totalCourses - completedCourses,
-      completionRate: completionRate.toFixed(1),
-      totalHours: totalHours.toFixed(1)
+      completionRate: isNaN(completionRate) ? '0.0' : completionRate.toFixed(1),
+      totalHours: isNaN(totalHours) ? '0.0' : totalHours.toFixed(1)
     };
   }, [employeeData]);
 

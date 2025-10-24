@@ -71,7 +71,8 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
       
       const emp = employeeMap.get(empCode);
       emp.total_courses++;
-      emp.total_hours += record.course_completion_hours || 0;
+      const hours = parseFloat(String(record.course_completion_hours || 0));
+      emp.total_hours += isNaN(hours) ? 0 : hours;
       emp.courses.push({
         course_name: record.course_name,
         course_category: record.course_category,
@@ -105,7 +106,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
     const totalMembers = teamMembers.length;
     const totalCourses = teamMembers.reduce((sum, emp) => sum + emp.total_courses, 0);
     const completedCourses = teamMembers.reduce((sum, emp) => sum + emp.completed_courses, 0);
-    const totalHours = teamMembers.reduce((sum, emp) => sum + emp.total_hours, 0);
+    const totalHours = teamMembers.reduce((sum, emp) => sum + (emp.total_hours || 0), 0);
     const avgCompletionRate = totalMembers > 0
       ? Math.round(teamMembers.reduce((sum, emp) => sum + emp.completion_rate, 0) / totalMembers)
       : 0;
@@ -117,7 +118,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
       totalMembers,
       totalCourses,
       completedCourses,
-      totalHours: totalHours.toFixed(1),
+      totalHours: isNaN(totalHours) ? '0.0' : totalHours.toFixed(1),
       avgCompletionRate,
       highPerformers,
       needsAttention
