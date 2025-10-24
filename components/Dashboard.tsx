@@ -29,6 +29,9 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
   const [selectedCourse, setSelectedCourse] = useState<string[]>([]);
   const [selectedDesignation, setSelectedDesignation] = useState<string[]>([]);
 
+  // Filter collapse state for mobile
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState<boolean>(false);
+
   // Search states for filters
   const [storeSearch, setStoreSearch] = useState<string>('');
   const [areaManagerSearch, setAreaManagerSearch] = useState<string>('');
@@ -218,24 +221,37 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-6 px-1 sm:px-2 lg:px-0">
-      {/* Multi-Select Filter Bar - Enhanced Mobile */}
+      {/* Multi-Select Filter Bar - Enhanced Mobile with Collapse */}
       <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 overflow-visible relative shadow-sm" style={{ zIndex: 1 }}>
-        {/* Filter Header - Mobile Friendly */}
+        {/* Filter Header - Mobile Friendly with Toggle */}
         <div className="flex items-center justify-between mb-3 sm:mb-4">
-          <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+          <button 
+            onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
+            className="flex items-center gap-2 lg:cursor-default touch-manipulation active:scale-95 lg:active:scale-100"
+          >
+            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+              </svg>
+              <span className="hidden sm:inline">Filters</span>
+              <span className="sm:hidden">Filters</span>
+            </h3>
+            <svg 
+              className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 lg:hidden ${isFiltersExpanded ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
-            <span className="hidden sm:inline">Filters</span>
-            <span className="sm:hidden">🔍</span>
-          </h3>
-          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full max-w-[140px] sm:max-w-none truncate">
+          </button>
+          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full max-w-[120px] sm:max-w-[180px] lg:max-w-none truncate">
             {getActiveFiltersText()}
           </span>
         </div>
 
-        {/* Filters Grid - Mobile-First Responsive Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
+        {/* Filters Grid - Collapsible on Mobile */}
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 overflow-hidden transition-all duration-300 ${isFiltersExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 lg:max-h-[2000px] lg:opacity-100'}`}>
           {/* Tenure Filter */}
           <div className="w-full">
             <MultiSelectFilter

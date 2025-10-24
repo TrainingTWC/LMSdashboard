@@ -229,18 +229,31 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
     // Get full course details for this employee
     const employeeCourses = data.filter(record => record.employee_code === employee.employee_code);
     
-    const courseDetails = employeeCourses.map(record => ({
-      course_name: record.course_name,
-      course_category: record.course_category,
-      course_type: record.course_type,
-      enrollment_date: record.course_enrolment_date,
-      completion_date: record.course_completion_date,
-      course_end_date: record.course_end_date,
-      completion_status: record.course_completion_status,
-      progress: record.course_progress,
-      completion_hours: record.course_completion_hours,
-      ...getCourseStatus(record)
-    }));
+    const courseDetails = employeeCourses.map(record => {
+      // Calculate correct progress based on completion status
+      let calculatedProgress = 0;
+      if (record.course_completion_status === 'Completed') {
+        calculatedProgress = 100;
+      } else if (record.course_progress && !isNaN(parseFloat(record.course_progress))) {
+        calculatedProgress = parseFloat(record.course_progress);
+      } else {
+        // If no progress data and not completed, assume in progress
+        calculatedProgress = 50;
+      }
+
+      return {
+        course_name: record.course_name,
+        course_category: record.course_category,
+        course_type: record.course_type,
+        enrollment_date: record.course_enrolment_date,
+        completion_date: record.course_completion_date,
+        course_end_date: record.course_end_date,
+        completion_status: record.course_completion_status,
+        progress: calculatedProgress,
+        completion_hours: record.course_completion_hours,
+        ...getCourseStatus(record)
+      };
+    });
 
     setSelectedEmployeeDetail({
       ...employee,
@@ -906,22 +919,24 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
                           </span>
                           <div className="text-gray-600 dark:text-gray-400">
                             {course.completion_status === 'Completed' 
-                              ? (course.completion_date ? new Date(course.completion_date).toLocaleDateString() : 'N/A')
-                              : (course.course_end_date ? new Date(course.course_end_date).toLocaleDateString() : 'N/A')
+                              ? (course.completion_date ? new Date(course.completion_date).toLocaleDateString() : 'Invalid Date')
+                              : (course.course_end_date && course.course_end_date !== 'Invalid Date' ? new Date(course.course_end_date).toLocaleDateString() : 'Invalid Date')
                             }
                           </div>
                         </div>
                         <div>
                           <span className="font-medium text-gray-700 dark:text-gray-300">Progress:</span>
                           <div className="flex items-center gap-2">
-                            <div className="text-gray-600 dark:text-gray-400">{course.progress}%</div>
+                            <div className="text-gray-600 dark:text-gray-400 min-w-[45px]">
+                              {Math.round(course.progress || 0)}%
+                            </div>
                             <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                               <div 
-                                className={`h-2 rounded-full ${
-                                  course.progress === 100 ? 'bg-green-500' :
-                                  course.progress >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                className={`h-2 rounded-full transition-all ${
+                                  course.completion_status === 'Completed' || (course.progress || 0) === 100 ? 'bg-green-500' :
+                                  (course.progress || 0) >= 50 ? 'bg-yellow-500' : 'bg-red-500'
                                 }`}
-                                style={{ width: `${course.progress}%` }}
+                                style={{ width: `${Math.min(100, Math.max(0, course.progress || 0))}%` }}
                               ></div>
                             </div>
                           </div>
