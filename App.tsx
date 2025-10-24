@@ -24,9 +24,8 @@ const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
   const [dataSource, setDataSource] = useState<'googleSheets' | 'none'>('none');
-  const [employeeCode, setEmployeeCode] = useState<string | null>(null);
-  const [managerCode, setManagerCode] = useState<string | null>(null);
-  const [trainerCode, setTrainerCode] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<'employee' | 'manager' | 'trainer' | 'admin'>('admin');
+  const [userId, setUserId] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
     if (typeof window !== 'undefined') {
@@ -49,27 +48,44 @@ const App: React.FC = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  // Role detection function - determines if ID is employee, manager, or trainer
+  const detectRole = (id: string, dataToCheck: (EmployeeTrainingRecord | MergedData)[]): 'employee' | 'manager' | 'trainer' | null => {
+    if (!id || !dataToCheck || dataToCheck.length === 0) return null;
+    
+    // Check if ID exists as an employee
+    const isEmployee = dataToCheck.some(record => record.employee_code === id);
+    
+    // Check if ID has people reporting to them (manager)
+    const isManager = dataToCheck.some(record => record.reporting_manager_code === id);
+    
+    // Check if ID exists in store mapping as trainer or leadership role
+    const isTrainer = storeMappingData.some(store => 
+      store.Trainer === id || 
+      store['E-Learning Specialist'] === id || 
+      store['Training Head'] === id || 
+      store['HR Head'] === id
+    );
+    
+    // Priority: Employee > Manager > Trainer
+    if (isEmployee) return 'employee';
+    if (isManager) return 'manager';
+    if (isTrainer) return 'trainer';
+    
+    return null;
+  };
+
   // Initialize on component mount only - check admin session, URL params, and auto-load data
   useEffect(() => {
-    // Check for employee_id or manager_id in URL parameters
+    // Check for single 'id' parameter in URL
     const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
     
-    // Check for employee view
-    const empId = urlParams.get('employee_id') || urlParams.get('emp_id') || urlParams.get('id');
-    if (empId) {
-      setEmployeeCode(empId);
-    }
-    
-    // Check for manager view
-    const mgrId = urlParams.get('manager_id') || urlParams.get('mgr_id') || urlParams.get('manager');
-    if (mgrId) {
-      setManagerCode(mgrId);
-    }
-    
-    // Check for trainer view
-    const trainerId = urlParams.get('trainer_id') || urlParams.get('trainer') || urlParams.get('t_id');
-    if (trainerId) {
-      setTrainerCode(trainerId);
+    if (id) {
+      setUserId(id);
+      // Role will be detected after data loads
+    } else {
+      setUserRole('admin');
+      setUserId(null);
     }
     
     // Check admin session
@@ -78,6 +94,21 @@ const App: React.FC = () => {
     // Auto-load data with persistence service
     autoLoadData();
   }, []); // Empty dependency array means this runs only once on mount
+  
+  // Detect role when data or userId changes
+  useEffect(() => {
+    if (userId && data && data.length > 0) {
+      const detectedRole = detectRole(userId, data);
+      if (detectedRole) {
+        setUserRole(detectedRole);
+      } else {
+        // ID not found in any role, show admin view with error
+        setUserRole('admin');
+      }
+    } else if (!userId) {
+      setUserRole('admin');
+    }
+  }, [userId, data]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
@@ -397,14 +428,28 @@ const App: React.FC = () => {
               )}
               
               {data && !isLoading && (
-                employeeCode ? (
-                  <EmployeeView data={data} employeeCode={employeeCode} isMerged={isMerged} />
-                ) : managerCode ? (
-                  <ManagerView data={data} managerCode={managerCode} isMerged={isMerged} />
-                ) : trainerCode ? (
-                  <TrainerView data={data} trainerCode={trainerCode} />
+                userRole === 'employee' && userId ? (
+                  <EmployeeView data={data} employeeCode={userId} isMerged={isMerged} />
+                ) : userRole === 'manager' && userId ? (
+                  <ManagerView data={data} managerCode={userId} isMerged={isMerged} />
+                ) : userRole === 'trainer' && userId ? (
+                  <TrainerView data={data} trainerCode={userId} />
                 ) : (
-                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} />
+                  <>
+                    {userId && (
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-6 shadow-xl mb-6">
+                        <div className="flex items-center mb-2">
+                          <span className="text-yellow-500 text-2xl mr-3">⚠️</span>
+                          <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">ID Not Found</h3>
+                        </div>
+                        <p className="text-yellow-700 dark:text-yellow-300">
+                          The ID "<strong>{userId}</strong>" was not found in the system as an employee, manager, or trainer.
+                          Please verify the ID and try again.
+                        </p>
+                      </div>
+                    )}
+                    <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} />
+                  </>
                 )
               )}
             </>

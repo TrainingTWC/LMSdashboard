@@ -3,7 +3,7 @@ import type { EmployeeTrainingRecord, MergedData } from '../types';
 import { storeMappingData } from '../data/storeMapping';
 
 interface TrainerViewProps {
-  data: EmployeeTrainingRecord[];
+  data: (EmployeeTrainingRecord | MergedData)[];
   trainerCode: string;
 }
 

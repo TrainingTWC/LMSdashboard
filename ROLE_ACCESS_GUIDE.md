@@ -1,12 +1,39 @@
 # Role-Based Access Control Guide
 
 ## Overview
-The Employee Training Dashboard now supports role-based access control with four different view types:
+The Employee Training Dashboard now supports intelligent role-based access control with a **single unified URL parameter**: `?id=`
 
-1. **Admin View** (Full Dashboard)
-2. **Employee View** (Individual employee data)
-3. **Manager View** (Team hierarchy data)
-4. **Trainer View** (Store-based access control)
+The system automatically detects the role based on the ID provided:
+
+1. **Admin View** (No ID parameter - Full Dashboard)
+2. **Employee View** (ID matches an employee code)
+3. **Manager View** (ID has people reporting to them)
+4. **Trainer View** (ID exists in store mapping as trainer/leadership)
+
+---
+
+## How It Works
+
+### Single URL Parameter: `?id=`
+
+Simply append `?id=YOUR_ID` to the dashboard URL, and the system will automatically determine which view to show based on who that ID belongs to.
+
+**Examples:**
+```
+?id=EMP001          → Employee View (if EMP001 is an employee)
+?id=H2595           → Manager View (if H2595 has direct reports)
+?id=H1761           → Trainer View (if H1761 is a trainer in store mapping)
+(no parameter)      → Admin View (full dashboard)
+```
+
+### Role Detection Priority
+
+If an ID matches multiple roles, the system uses this priority order:
+
+1. **Employee** (Highest Priority - Most Specific)
+2. **Manager** (Has people reporting to them)
+3. **Trainer** (Exists in store mapping)
+4. **Admin** (Default - No ID or ID not found)
 
 ---
 
@@ -30,7 +57,7 @@ https://trainingtwc.github.io/LMSdashboard/
 ---
 
 ### 2. Employee View
-**Access:** Use `employee_id`, `emp_id`, or `id` URL parameter
+**Access:** Use `?id=EMPLOYEE_CODE`
 
 **Features:**
 - Personal training dashboard
@@ -39,22 +66,22 @@ https://trainingtwc.github.io/LMSdashboard/
 - Course details grouped by category
 - Personal profile information
 
-**URL Examples:**
+**URL Example:**
 ```
-?employee_id=EMP001
-?emp_id=EMP001
 ?id=EMP001
 ```
 
 **Full URL:**
 ```
-https://trainingtwc.github.io/LMSdashboard/?employee_id=EMP001
+https://trainingtwc.github.io/LMSdashboard/?id=EMP001
 ```
+
+**Detection:** System checks if the ID exists as an `employee_code` in the data.
 
 ---
 
 ### 3. Manager View
-**Access:** Use `manager_id`, `mgr_id`, or `manager` URL parameter
+**Access:** Use `?id=MANAGER_CODE`
 
 **Features:**
 - **Hierarchical team view** (recursive)
@@ -68,17 +95,17 @@ https://trainingtwc.github.io/LMSdashboard/?employee_id=EMP001
   - 🟡 Yellow: 60-79% completion
   - 🔴 Red: <60% completion
 
-**URL Examples:**
+**URL Example:**
 ```
-?manager_id=MGR001
-?mgr_id=MGR001
-?manager=MGR001
+?id=H2595
 ```
 
 **Full URL:**
 ```
-https://trainingtwc.github.io/LMSdashboard/?manager_id=H2595
+https://trainingtwc.github.io/LMSdashboard/?id=H2595
 ```
+
+**Detection:** System checks if any employee has this ID as their `reporting_manager_code`.
 
 **How it works:**
 - Uses `reporting_manager_code` field to build hierarchy
@@ -87,8 +114,8 @@ https://trainingtwc.github.io/LMSdashboard/?manager_id=H2595
 
 ---
 
-### 4. Trainer View (NEW! 🎉)
-**Access:** Use `trainer_id`, `trainer`, or `t_id` URL parameter
+### 4. Trainer View
+**Access:** Use `?id=TRAINER_CODE`
 
 **Features:**
 - **Store-based access control**
@@ -100,24 +127,28 @@ https://trainingtwc.github.io/LMSdashboard/?manager_id=H2595
 - Employee list with course details
 - Store assignment visibility
 
-**URL Examples:**
+**URL Example:**
 ```
-?trainer_id=H1761
-?trainer=H1761
-?t_id=H1761
+?id=H1761
 ```
 
 **Full URL:**
 ```
-https://trainingtwc.github.io/LMSdashboard/?trainer_id=H1761
+https://trainingtwc.github.io/LMSdashboard/?id=H1761
 ```
+
+**Detection:** System checks if the ID exists in `storeMapping.ts` as:
+- Trainer
+- E-Learning Specialist
+- Training Head
+- HR Head
 
 ---
 
 ## Role Hierarchy & Access Matrix
 
-| Role | Trainer ID | Access Level | Stores Visible | Data Scope |
-|------|-----------|--------------|----------------|------------|
+| Role | Example IDs | Access Level | Stores Visible | Data Scope |
+|------|-------------|--------------|----------------|------------|
 | **Trainer** | H1761, H701, H1697, etc. | Store-specific | Assigned stores only | Employees in assigned stores |
 | **E-Learning Specialist** | H541 | Full access | All stores | All employee data |
 | **Training Head** | H3237 | Full access | All stores | All employee data |
@@ -125,84 +156,124 @@ https://trainingtwc.github.io/LMSdashboard/?trainer_id=H1761
 
 ---
 
-## Store Mapping Structure
-
-Each store has the following role assignments:
-```csv
-Store ID, Store Name, Trainer, E-Learning Specialist, Training Head, HR Head
-S001, Koramangala, H1761, H541, H3237, H2081
-S002, CMH Indira Nagar, H1761, H541, H3237, H2081
-S003, HSR-1, H701, H541, H3237, H2081
-```
-
-### Trainer Examples:
-- **H1761** (Mahadev): Trainer for stores S001, S002, S004, S006, S007, S009, etc.
-- **H701** (Mallika): Trainer for stores S003, S008, S015, S016, S017, S018, etc.
-- **H1697** (Sheldon): Trainer for stores S005, S011, S020, S022, S023, etc.
-- **H3252** (Priyanka): Trainer for stores S043, S048, S058, S059, S060, etc.
-
-### Leadership Roles:
-- **H541**: E-Learning Specialist (Full access to ALL stores)
-- **H3237**: Training Head (Full access to ALL stores)
-- **H2081**: HR Head (Full access to ALL stores)
-
----
-
 ## Use Cases
 
-### Scenario 1: Trainer wants to check their team
-**Action:** Navigate to `?trainer_id=H1761`
-**Result:** Sees all employees from stores: S001, S002, S004, S006, S007, S009, S012, S014, S021, S031
+### Scenario 1: Employee wants to check personal progress
+**Action:** Navigate to `?id=EMP123`
+**Result:** Personal dashboard with individual course progress and completion stats
 
 ---
 
-### Scenario 2: E-Learning Specialist needs to review all training
-**Action:** Navigate to `?trainer_id=H541`
-**Result:** Full access - sees ALL employees across ALL stores with "Full Access" badge
-
----
-
-### Scenario 3: Training Head wants company-wide insights
-**Action:** Navigate to `?trainer_id=H3237`
-**Result:** Full access - sees ALL employees across ALL stores with "Full Access" badge
-
----
-
-### Scenario 4: Area Manager wants to see team hierarchy
-**Action:** Navigate to `?manager_id=H2595`
+### Scenario 2: Manager wants to see team hierarchy
+**Action:** Navigate to `?id=H2595`
 **Result:** Sees all direct reports (Store Managers) AND indirect reports (Baristas, Supervisors) in the region
 
 ---
 
-### Scenario 5: Employee wants to check personal progress
-**Action:** Navigate to `?employee_id=EMP123`
-**Result:** Personal dashboard with individual course progress and completion stats
+### Scenario 3: Trainer wants to check their team
+**Action:** Navigate to `?id=H1761`
+**Result:** Sees all employees from assigned stores: S001, S002, S004, S006, S007, S009, S012, S014, S021, S031
+
+---
+
+### Scenario 4: E-Learning Specialist needs to review all training
+**Action:** Navigate to `?id=H541`
+**Result:** Full access - sees ALL employees across ALL stores with "Full Access" badge
+
+---
+
+### Scenario 5: Training Head wants company-wide insights
+**Action:** Navigate to `?id=H3237`
+**Result:** Full access - sees ALL employees across ALL stores with "Full Access" badge
+
+---
+
+### Scenario 6: Admin wants full dashboard analytics
+**Action:** Navigate to base URL (no parameters)
+**Result:** Full admin dashboard with all charts, filters, and analytics
+
+---
+
+## Data Source
+
+All role views use the **same data source**: `lms-completion.json` (merged data)
+
+The data is merged with store mapping information to enable:
+- Store-based filtering for trainers
+- Regional analytics
+- Area manager hierarchies
+- Location-based reporting
 
 ---
 
 ## Technical Implementation
 
 ### Data Flow:
-1. **URL Parameter Detection**: App.tsx checks for `trainer_id`, `trainer`, or `t_id`
-2. **Store Lookup**: TrainerView component queries `storeMapping.ts` for trainer's stores
-3. **Access Level Check**: Determines if user is Trainer, E-Learning Specialist, Training Head, or HR Head
-4. **Data Filtering**: Filters employee data by Store ID (or shows all if full access)
-5. **Display**: Shows employee cards with course details and statistics
+1. **URL Parameter Detection**: App.tsx checks for single `?id=` parameter
+2. **Role Detection**: `detectRole()` function checks:
+   - Is ID an employee? (exists in `employee_code`)
+   - Is ID a manager? (exists in `reporting_manager_code`)
+   - Is ID a trainer? (exists in `storeMapping.ts`)
+3. **Priority Resolution**: If ID matches multiple roles, uses priority order
+4. **View Rendering**: Renders appropriate view component
+5. **Data Filtering**: Each view filters data according to role permissions
 
 ### File Structure:
 ```
 components/
-  ├── TrainerView.tsx      (New trainer-specific view)
+  ├── TrainerView.tsx      (Trainer-specific view)
   ├── ManagerView.tsx      (Hierarchical manager view)
   ├── EmployeeView.tsx     (Individual employee view)
   └── TabbedDashboard.tsx  (Admin full dashboard)
 
 data/
-  └── storeMapping.ts      (Updated with role hierarchy)
+  └── storeMapping.ts      (Store and role mappings)
 
-types.ts                   (Updated StoreRecord interface)
-App.tsx                    (Updated routing logic)
+types.ts                   (Type definitions)
+App.tsx                    (Main routing with role detection)
 ```
+
+### Role Detection Function:
+```typescript
+const detectRole = (id: string, data: any[]): 'employee' | 'manager' | 'trainer' | null => {
+  // Check if ID exists as an employee
+  const isEmployee = data.some(record => record.employee_code === id);
+  
+  // Check if ID has people reporting to them (manager)
+  const isManager = data.some(record => record.reporting_manager_code === id);
+  
+  // Check if ID exists in store mapping as trainer or leadership role
+  const isTrainer = storeMappingData.some(store => 
+    store.Trainer === id || 
+    store['E-Learning Specialist'] === id || 
+    store['Training Head'] === id || 
+    store['HR Head'] === id
+  );
+  
+  // Priority: Employee > Manager > Trainer
+  if (isEmployee) return 'employee';
+  if (isManager) return 'manager';
+  if (isTrainer) return 'trainer';
+  
+  return null;
+};
+```
+
+---
+
+## Error Handling
+
+### ID Not Found
+If the provided ID doesn't match any role, the system will:
+1. Show a warning message: "The ID 'XXXXX' was not found in the system"
+2. Display the full admin dashboard below the warning
+3. Allow the user to verify and correct the ID
+
+### Missing Data Fields
+If required data fields are missing:
+- **Manager View**: Requires `reporting_manager_code` field
+- **Trainer View**: Requires `Store ID` field
+- System will show appropriate error messages
 
 ---
 
@@ -221,29 +292,47 @@ For production environments with sensitive data, consider:
 
 ---
 
-## Future Enhancements
+## Quick Reference
 
-Potential additions:
-- [ ] Export functionality for trainer reports
-- [ ] Email notifications for low performers
-- [ ] Trainer-specific course assignment interface
-- [ ] Mobile app with QR code access
-- [ ] Integration with LMS for real-time data
-- [ ] Authentication with Azure AD/SAML
+### New Simplified URL System
+
+| Role Type | URL Format | Example | Detection Method |
+|-----------|------------|---------|------------------|
+| Admin | (no parameter) | `https://example.com/` | Default when no ID |
+| Employee | `?id=CODE` | `?id=EMP001` | ID exists as employee_code |
+| Manager | `?id=CODE` | `?id=H2595` | ID exists as reporting_manager_code |
+| Trainer | `?id=CODE` | `?id=H1761` | ID exists in store mapping |
+
+### Benefits of Single Parameter System
+
+✅ **Simplicity**: One parameter to rule them all  
+✅ **Flexibility**: Same link format for everyone  
+✅ **Intelligence**: Automatic role detection  
+✅ **Priority**: Clear hierarchy when ID has multiple roles  
+✅ **Error Handling**: Graceful fallback to admin view  
 
 ---
 
-## Quick Reference
+## Troubleshooting
 
-| View Type | URL Parameter | Example Value | Access Level |
-|-----------|---------------|---------------|--------------|
-| Admin | None | - | Full dashboard |
-| Employee | `employee_id` | EMP001 | Personal data only |
-| Manager | `manager_id` | H2595 | Team hierarchy |
-| Trainer | `trainer_id` | H1761 | Assigned stores |
-| E-Learning | `trainer_id` | H541 | All stores (full access) |
-| Training Head | `trainer_id` | H3237 | All stores (full access) |
-| HR Head | `trainer_id` | H2081 | All stores (full access) |
+### Problem: ID not recognized
+**Solution:** 
+1. Verify the ID exists in your CSV data
+2. Check spelling and case sensitivity
+3. Ensure data has been merged with store mapping
+4. Check browser console for errors
+
+### Problem: Wrong view showing
+**Solution:**
+1. Check role detection priority order
+2. If ID has multiple roles, higher priority role will show
+3. Verify store mapping data is up to date
+
+### Problem: No data showing in Trainer View
+**Solution:**
+1. Ensure CSV includes `Store ID` column
+2. Verify store IDs match between data and store mapping
+3. Check trainer is assigned to stores in `storeMapping.ts`
 
 ---
 
@@ -258,4 +347,4 @@ For questions or issues:
 ---
 
 **Last Updated:** October 24, 2025  
-**Version:** 2.0 - Role-Based Access Control
+**Version:** 3.0 - Simplified Single Parameter System
