@@ -8,7 +8,7 @@ This guide shows you how to use GitHub Actions to generate AI insights during bu
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. You push code/data to GitHub                             │
 │ 2. GitHub Actions runs automatically                         │
-│ 3. Script calls Gemini API (server-side, no CORS issues)   │
+│ 3. Script calls OpenAI API (server-side, no CORS issues)   │
 │ 4. Insights saved as insights.json                          │
 │ 5. GitHub Pages serves the pre-generated insights           │
 │ 6. Your app loads insights.json (no API calls needed!)     │
@@ -31,20 +31,20 @@ This guide shows you how to use GitHub Actions to generate AI insights during bu
 
 ## Setup Instructions
 
-### Step 1: Add Gemini API Key to GitHub Secrets
+### Step 1: Add OpenAI API Key to GitHub Secrets
 
 1. Go to your GitHub repository
 2. Click **Settings** → **Secrets and variables** → **Actions**
 3. Click **New repository secret**
-4. Name: `GEMINI_API_KEY`
-5. Value: Your Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+4. Name: `OPENAI_API_KEY`
+5. Value: Your OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys)
 6. Click **Add secret**
 
 ### Step 2: Files Already Created
 
 I've created these files for you:
 - `.github/workflows/generate-insights.yml` - GitHub Actions workflow
-- `scripts/generate-insights.js` - Script to call Gemini API
+- `scripts/generate-insights.js` - Script to call OpenAI API
 - Updated `GeminiInsights.tsx` - Now loads pre-generated insights first
 
 ### Step 3: Prepare Your Data
@@ -143,12 +143,12 @@ schedule:
 
 ## Troubleshooting
 
-### Workflow Failed: "GEMINI_API_KEY not found"
+### Workflow Failed: "OPENAI_API_KEY not found"
 **Solution:** Make sure you added the secret correctly in repository settings.
 
 ### Workflow Failed: "No training data found"
 **Solution:** 
-- Check if `public/data/training-data.json` exists
+- Check if `public/data/lms-completion.json` exists
 - Update the path in `scripts/generate-insights.js` if needed
 
 ### Workflow Succeeded but No insights.json
@@ -186,8 +186,8 @@ const [usePreGenerated, setUsePreGenerated] = useState<boolean>(false);
 
 ### Estimated Costs:
 - **GitHub Actions:** FREE (public repo) or ~$0-2/month (private)
-- **Gemini API:** FREE for typical usage
-- **Total:** $0-2/month
+- **OpenAI API:** ~$0.01-0.10 per insight generation (gpt-4o-mini)
+- **Total:** $0-5/month for typical usage
 
 ---
 
@@ -267,7 +267,7 @@ curl https://trainingtwc.github.io/LMSdashboard/insights.json
 
 ## Next Steps
 
-1. ✅ Add GEMINI_API_KEY to GitHub Secrets
+1. ✅ Add OPENAI_API_KEY to GitHub Secrets
 2. ✅ Ensure data file is in correct location
 3. ✅ Enable workflow write permissions
 4. ✅ Push changes to trigger first run

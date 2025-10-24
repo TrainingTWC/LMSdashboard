@@ -9,10 +9,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function generateInsights() {
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   
-  if (!GEMINI_API_KEY) {
-    console.error('❌ GEMINI_API_KEY not found in environment variables');
+  if (!OPENAI_API_KEY) {
+    console.error('❌ OPENAI_API_KEY not found in environment variables');
     process.exit(1);
   }
 
@@ -40,46 +40,57 @@ async function generateInsights() {
     console.log(`📂 Found data at: ${dataPath}`);
     const data = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
     
-    // Generate summary (same logic as geminiService.ts)
+    // Generate summary (same logic as aiService.ts)
     const summary = createSummary(data);
     
-    const prompt = `
-      As an expert data analyst specializing in Learning & Development, analyze the following employee training data summary.
+    const prompt = `As an expert data analyst specializing in Learning & Development, analyze the following employee training data summary.
 
-      Data Summary:
-      ${JSON.stringify(summary, null, 2)}
+Data Summary:
+${JSON.stringify(summary, null, 2)}
 
-      Based on this summary, provide:
-      1. **A brief, high-level overview** of the training program's health.
-      2. **Key Insights & Observations:** Identify top-performing and lowest-performing groups.
-      3. **Actionable Recommendations:** Suggest 2-3 specific, actionable steps to improve training completion rates.
+Based on this summary, provide:
+1. **A brief, high-level overview** of the training program's health.
+2. **Key Insights & Observations:** Identify top-performing and lowest-performing groups.
+3. **Actionable Recommendations:** Suggest 2-3 specific, actionable steps to improve training completion rates.
 
-      Format your response clearly with headings for each section. Be concise and professional. Use markdown formatting.
-    `;
+Format your response clearly with headings for each section. Be concise and professional. Use markdown formatting.`;
 
-    console.log('🤖 Calling Gemini API...');
+    console.log('🤖 Calling OpenAI API...');
     
-    // Call Gemini API
+    // Call OpenAI API
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
+      'https://api.openai.com/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }]
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert data analyst specializing in Learning & Development and employee training analytics.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500
         })
       }
     );
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(`Gemini API error: ${error.error?.message || response.statusText}`);
+      throw new Error(`OpenAI API error: ${error.error?.message || response.statusText}`);
     }
 
     const result = await response.json();
-    const insights = result.candidates?.[0]?.content?.parts?.[0]?.text || 'No insights generated';
+    const insights = result.choices?.[0]?.message?.content || 'No insights generated';
 
     // Save insights to public folder
     const outputPath = path.join(__dirname, '../public/insights.json');
