@@ -49,19 +49,21 @@ I've created these files for you:
 
 ### Step 3: Prepare Your Data
 
-The script expects training data at `public/data/training-data.json`.
+The script automatically searches for training data in these locations (in order):
+1. `public/data/lms-completion.json` ✅ (Default)
+2. `public/data/training-data.json`
+3. `data/lms-completion.json`
 
-**Option A: Use existing data**
-Copy your current data file to this location:
-```bash
-mkdir -p public/data
-cp your-data-file.json public/data/training-data.json
-```
+**Your data is already in the correct location!**
+The file `public/data/lms-completion.json` exists and will be found automatically.
 
-**Option B: Update the script**
-Edit `scripts/generate-insights.js` line 14 to point to your data location:
+**Option: Add additional data locations**
+If you have data elsewhere, edit `scripts/generate-insights.js` to add more search paths:
 ```javascript
-const dataPath = path.join(__dirname, '../path/to/your/data.json');
+// Add your custom path to the search list
+if (!fs.existsSync(dataPath)) {
+  dataPath = path.join(__dirname, '../path/to/your/data.json');
+}
 ```
 
 ### Step 4: Commit and Push
