@@ -41,6 +41,10 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add public/insights.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update AI insights"
-          git push
+          git add public/insights.json || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update AI insights [skip ci]"
+            git push
+          fi

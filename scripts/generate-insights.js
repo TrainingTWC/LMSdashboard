@@ -70,6 +70,14 @@ async function generateInsights() {
 
     // Save insights to public folder
     const outputPath = path.join(__dirname, '../public/insights.json');
+    const outputDir = path.dirname(outputPath);
+    
+    // Create public directory if it doesn't exist
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+      console.log(`📁 Created directory: ${outputDir}`);
+    }
+    
     fs.writeFileSync(outputPath, JSON.stringify({
       insights,
       generatedAt: new Date().toISOString(),
