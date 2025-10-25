@@ -14,13 +14,13 @@ const _create_summary = (data: (EmployeeTrainingRecord | MergedData)[], isMerged
         const deptRecords = data.filter(d => d.department === dept);
         const deptCompleted = deptRecords.filter(d => d.course_completion_status === 'Completed').length;
         const deptRate = deptRecords.length > 0 ? (deptCompleted / deptRecords.length) * 100 : 0;
-        return { department: dept, completionRate: deptRate.toFixed(1) + '%', total: deptRecords.length };
+        return { department: dept, completionRate: Math.round(deptRate), total: deptRecords.length };
     });
 
     let summary: any = {
         totalEnrollments: totalRecords,
-        overallCompletionRate: completionRate.toFixed(1) + '%',
-        departmentPerformance: departmentCompletion.sort((a,b) => b.completionRate.localeCompare(a.completionRate)),
+        overallCompletionRate: Math.round(completionRate),
+        departmentPerformance: departmentCompletion.sort((a,b) => (b.completionRate as number) - (a.completionRate as number)),
     };
 
     if(isMerged) {
@@ -30,7 +30,7 @@ const _create_summary = (data: (EmployeeTrainingRecord | MergedData)[], isMerged
             const regionRecords = mergedData.filter(d => d.Region === region);
             const regionCompleted = regionRecords.filter(d => d.course_completion_status === 'Completed').length;
             const regionRate = regionRecords.length > 0 ? (regionCompleted / regionRecords.length) * 100 : 0;
-            return { region, completionRate: regionRate.toFixed(1) + '%', total: regionRecords.length };
+            return { region, completionRate: Math.round(regionRate), total: regionRecords.length };
         });
 
         const trainers = [...new Set(mergedData.map(d => d.Trainer))].filter(Boolean);
@@ -38,7 +38,7 @@ const _create_summary = (data: (EmployeeTrainingRecord | MergedData)[], isMerged
             const trainerRecords = mergedData.filter(d => d.Trainer === trainer);
             const trainerCompleted = trainerRecords.filter(d => d.course_completion_status === 'Completed').length;
             const trainerRate = trainerRecords.length > 0 ? (trainerCompleted / trainerRecords.length) * 100 : 0;
-            return { trainer, completionRate: trainerRate.toFixed(1) + '%', total: trainerRecords.length };
+            return { trainer, completionRate: Math.round(trainerRate), total: trainerRecords.length };
         });
 
         const ams = [...new Set(mergedData.map(d => d.AM))].filter(Boolean);
@@ -46,14 +46,14 @@ const _create_summary = (data: (EmployeeTrainingRecord | MergedData)[], isMerged
             const amRecords = mergedData.filter(d => d.AM === am);
             const amCompleted = amRecords.filter(d => d.course_completion_status === 'Completed').length;
             const amRate = amRecords.length > 0 ? (amCompleted / amRecords.length) * 100 : 0;
-            return { am, completionRate: amRate.toFixed(1) + '%', total: amRecords.length };
+            return { am, completionRate: Math.round(amRate), total: amRecords.length };
         });
         
         summary = {
             ...summary,
-            regionPerformance: regionCompletion.sort((a,b) => b.completionRate.localeCompare(a.completionRate)),
-            trainerEffectiveness: trainerCompletion.sort((a,b) => b.completionRate.localeCompare(a.completionRate)),
-            areaManagerPerformance: amCompletion.sort((a,b) => b.completionRate.localeCompare(a.completionRate)),
+            regionPerformance: regionCompletion.sort((a,b) => (b.completionRate as number) - (a.completionRate as number)),
+            trainerEffectiveness: trainerCompletion.sort((a,b) => (b.completionRate as number) - (a.completionRate as number)),
+            areaManagerPerformance: amCompletion.sort((a,b) => (b.completionRate as number) - (a.completionRate as number)),
         }
     }
 
