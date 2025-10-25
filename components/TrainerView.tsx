@@ -11,6 +11,10 @@ interface TrainerViewProps {
 const ITEMS_PER_PAGE = 20; // Show 20 employees at a time
 
 const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNames = {} }) => {
+  // Normalize trainerCode and lookup display name case-insensitively
+  const normalizedTrainerCodeUpper = trainerCode ? trainerCode.toUpperCase() : trainerCode;
+  const normalizedTrainerCodeLower = trainerCode ? trainerCode.toLowerCase() : trainerCode;
+  const trainerDisplayName = trainerNames[normalizedTrainerCodeUpper] || trainerNames[normalizedTrainerCodeLower] || null;
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [isStatModalOpen, setIsStatModalOpen] = useState<boolean>(false);
   const [selectedStatType, setSelectedStatType] = useState<'total' | 'highPerformers' | 'needsAttention' | null>(null);
@@ -235,10 +239,10 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                 {roleName} Dashboard
               </h1>
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                {trainerNames[trainerCode] ? (
+                {trainerDisplayName ? (
                   <>
-                    <span className="font-bold text-lg">{trainerNames[trainerCode]}</span>
-                    <span className="ml-2 text-xs font-mono font-semibold">({trainerCode})</span>
+                    <span className="font-bold text-lg text-gray-900 dark:text-white">{trainerDisplayName}</span>
+                    <span className="ml-2 text-xs font-mono font-semibold text-gray-600 dark:text-gray-300">({normalizedTrainerCodeUpper})</span>
                   </>
                 ) : (
                   <>ID: <span className="font-mono font-semibold">{trainerCode}</span></>
@@ -436,7 +440,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                 )}
                 className="w-full p-4 sm:p-6 text-left hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all duration-200 touch-manipulation active:scale-[0.99]"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-stretch justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 sm:gap-3 mb-3">
                       {/* Avatar */}
@@ -513,7 +517,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-center justify-center gap-4 h-full">
                     {/* Circular Progress */}
                     <div className="relative w-16 h-16 sm:w-20 sm:h-20">
                       <svg className="w-full h-full transform -rotate-90">

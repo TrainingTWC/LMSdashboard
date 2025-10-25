@@ -762,7 +762,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
         onClick={onToggle}
         className="w-full p-3 sm:p-4 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-all duration-200 text-left touch-manipulation active:scale-[0.99]"
       >
-        <div className="flex items-center justify-between gap-3">
+  <div className="flex items-stretch justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <div className={`w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-full flex items-center justify-center text-white font-bold shadow-md bg-gradient-to-br ${isDirect ? 'from-indigo-500 to-purple-500' : 'from-purple-500 to-pink-500'}`}>
@@ -798,7 +798,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
             </div>
           </div>
           
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          <div className="flex flex-col items-center justify-center gap-2 sm:gap-4 flex-shrink-0 h-full">
             <div className="text-center">
               <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20">
                 {/* Glow effect background */}
