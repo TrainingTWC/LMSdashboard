@@ -308,7 +308,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
 
             {/* Average Completion Card */}
             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-yellow-200 dark:border-yellow-800 relative overflow-hidden">
-              <div className="flex flex-col items-center text-center relative z-10">
+              <div className="flex flex-col items-center text-center relative z-10 select-none">
                 <div className="mb-2 p-2 bg-yellow-500/10 rounded-lg">
                   <svg className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
