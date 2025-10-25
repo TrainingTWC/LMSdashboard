@@ -7,6 +7,8 @@ interface ManagerViewProps {
   isMerged: boolean;
 }
 
+const ITEMS_PER_PAGE = 20; // Show 20 employees at a time
+
 const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }) => {
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
@@ -14,6 +16,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
   const [selectedStatType, setSelectedStatType] = useState<'members' | 'highPerformers' | 'needsAttention' | 'direct' | 'indirect' | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterLevel, setFilterLevel] = useState<'all' | 'direct' | 'indirect'>('all');
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Build reporting hierarchy - find all employees reporting to this manager (direct and indirect)
   const teamData = useMemo(() => {
@@ -168,6 +171,25 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
     
     return { managerRecord, directReports, indirectReports };
   }, [teamMembers, managerCode, searchTerm, filterLevel]);
+
+  // Pagination for direct and indirect reports
+  const totalDirectPages = Math.ceil(teamLevels.directReports.length / ITEMS_PER_PAGE);
+  const totalIndirectPages = Math.ceil(teamLevels.indirectReports.length / ITEMS_PER_PAGE);
+  
+  const paginatedDirect = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return teamLevels.directReports.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [teamLevels.directReports, currentPage]);
+  
+  const paginatedIndirect = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return teamLevels.indirectReports.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [teamLevels.indirectReports, currentPage]);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterLevel]);
 
   // Handle stat card clicks
   const handleStatCardClick = (statType: 'members' | 'highPerformers' | 'needsAttention' | 'direct' | 'indirect') => {
@@ -455,10 +477,15 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               Direct Reports ({teamLevels.directReports.length})
+              {totalDirectPages > 1 && (
+                <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+                  (Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, teamLevels.directReports.length)})
+                </span>
+              )}
             </h2>
             
             <div className="space-y-3">
-              {teamLevels.directReports.map((employee) => (
+              {paginatedDirect.map((employee) => (
                 <EmployeeCard
                   key={employee.employee_code}
                   employee={employee}
@@ -481,10 +508,15 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               Indirect Reports ({teamLevels.indirectReports.length})
+              {totalIndirectPages > 1 && (
+                <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+                  (Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, teamLevels.indirectReports.length)})
+                </span>
+              )}
             </h2>
             
             <div className="space-y-3">
-              {teamLevels.indirectReports.map((employee) => (
+              {paginatedIndirect.map((employee) => (
                 <EmployeeCard
                   key={employee.employee_code}
                   employee={employee}
@@ -495,6 +527,48 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                   isDirect={false}
                 />
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {(totalDirectPages > 1 || totalIndirectPages > 1) && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 px-2">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Page {currentPage} of {Math.max(totalDirectPages, totalIndirectPages)}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                First
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                Previous
+              </button>
+              <span className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium">
+                {currentPage}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(Math.max(totalDirectPages, totalIndirectPages), prev + 1))}
+                disabled={currentPage === Math.max(totalDirectPages, totalIndirectPages)}
+                className="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setCurrentPage(Math.max(totalDirectPages, totalIndirectPages))}
+                disabled={currentPage === Math.max(totalDirectPages, totalIndirectPages)}
+                className="px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                Last
+              </button>
             </div>
           </div>
         )}

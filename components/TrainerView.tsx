@@ -7,12 +7,15 @@ interface TrainerViewProps {
   trainerCode: string;
 }
 
+const ITEMS_PER_PAGE = 20; // Show 20 employees at a time
+
 const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [isStatModalOpen, setIsStatModalOpen] = useState<boolean>(false);
   const [selectedStatType, setSelectedStatType] = useState<'total' | 'highPerformers' | 'needsAttention' | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterStore, setFilterStore] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Get trainer info and their stores
   const trainerInfo = useMemo(() => {
@@ -183,6 +186,19 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
       needsAttention
     };
   }, [employeeData]);
+
+  // Pagination
+  const totalPages = Math.ceil(employeeData.length / ITEMS_PER_PAGE);
+  const paginatedEmployees = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return employeeData.slice(startIndex, endIndex);
+  }, [employeeData, currentPage]);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStore]);
 
   if (employeeData.length === 0) {
     return (
@@ -393,9 +409,14 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
         <div className="space-y-3">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white px-2">
             Employees ({employeeData.length})
+            {totalPages > 1 && (
+              <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+                (Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, employeeData.length)})
+              </span>
+            )}
           </h2>
           
-          {employeeData.map((employee) => (
+          {paginatedEmployees.map((employee) => (
             <div
               key={employee.employee_code}
               className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-indigo-200/50 dark:border-indigo-700/50 overflow-hidden hover:shadow-xl transition-shadow duration-300"
@@ -636,6 +657,48 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
             </div>
           ))}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 px-2">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Page {currentPage} of {totalPages}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                First
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                Previous
+              </button>
+              <span className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium">
+                {currentPage}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                Last
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Stat Card Detail Modal */}
         {isStatModalOpen && selectedStatType && (

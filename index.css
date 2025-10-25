@@ -14,6 +14,20 @@ body {
   /* Improve mobile touch interactions */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  /* Smooth theme transitions */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Smooth transitions for all theme-dependent elements */
+*,
+*::before,
+*::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Disable transitions for animations and transforms to avoid conflicts */
+* {
+  transition-property: background-color, border-color, color;
 }
 
 /* Dark mode support */

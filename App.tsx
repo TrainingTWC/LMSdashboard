@@ -36,8 +36,10 @@ const App: React.FC = () => {
   });
 
   // Apply theme changes without reloading data
-  // Apply theme changes without reloading data
   useEffect(() => {
+    // Add transition class for smooth theme switching
+    document.documentElement.style.transition = 'background-color 0.2s ease, color 0.2s ease';
+    
     // Apply the theme to the document
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
