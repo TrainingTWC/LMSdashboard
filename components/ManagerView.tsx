@@ -864,11 +864,11 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
                 {/* Center text with icon */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
                   {employee.completion_rate === 100 ? (
-                    <svg className="w-8 h-8 text-green-500 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   ) : (
-                    <span className={`text-xl sm:text-2xl font-bold ${
+                    <span className={`text-sm sm:text-base md:text-lg font-bold ${
                       employee.completion_rate >= 80 ? 'text-green-600 dark:text-green-400' :
                       employee.completion_rate >= 60 ? 'text-amber-600 dark:text-amber-400' :
                       'text-red-600 dark:text-red-400'
