@@ -757,59 +757,59 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
   const badge = getPerformanceBadge(employee.completion_rate);
 
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+    <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 backdrop-blur-md bg-white/90 dark:bg-slate-800/90">
       <button
         onClick={onToggle}
-        className="w-full p-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 text-left touch-manipulation active:scale-[0.99]"
+        className="w-full p-3 sm:p-4 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-all duration-200 text-left touch-manipulation active:scale-[0.99]"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md bg-gradient-to-br ${isDirect ? 'from-indigo-500 to-purple-500' : 'from-purple-500 to-pink-500'}`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-full flex items-center justify-center text-white font-bold shadow-md bg-gradient-to-br ${isDirect ? 'from-indigo-500 to-purple-500' : 'from-purple-500 to-pink-500'}`}>
                 {employee.employee_name.charAt(0).toUpperCase()}
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-lg">{employee.employee_name}</h3>
-                  <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${badge.color}`}>
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-lg truncate">{employee.employee_name}</h3>
+                  <span className={`px-2 py-0.5 text-xs rounded-full font-medium whitespace-nowrap ${badge.color}`}>
                     {badge.text}
                   </span>
                 </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{employee.designation}</p>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 truncate">{employee.designation}</p>
               </div>
             </div>
             
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs sm:text-sm">
-              <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 text-xs">
+              <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1 truncate">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <span className="font-medium">{employee.reporting_manager_name}</span>
+                <span className="font-medium truncate">{employee.reporting_manager_name}</span>
               </span>
               {employee.location && (
-                <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1 truncate">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className="font-medium">{employee.location}</span>
+                  <span className="font-medium truncate">{employee.location}</span>
                 </span>
               )}
             </div>
           </div>
           
-          <div className="flex items-center gap-4 ml-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <div className="text-center">
-              <div className={`relative w-16 h-16 sm:w-20 sm:h-20`}>
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20">
                 {/* Glow effect background */}
-                <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${
+                <div className={`absolute inset-0 rounded-full blur-lg sm:blur-xl opacity-20 sm:opacity-30 ${
                   employee.completion_rate >= 80 ? 'bg-green-400' : 
                   employee.completion_rate >= 60 ? 'bg-amber-400' : 
                   'bg-red-400'
                 }`}></div>
                 
                 {/* SVG Progress Circle */}
-                <svg className="w-full h-full transform -rotate-90 relative z-10">
+                <svg className="w-full h-full transform -rotate-90 relative z-10" viewBox="0 0 80 80">
                   {/* Background circle with subtle shadow */}
                   <circle 
                     cx="40" 
@@ -832,7 +832,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
                     strokeLinecap="round"
                     className="transition-all duration-1000 ease-out drop-shadow-lg"
                     style={{
-                      filter: `drop-shadow(0 0 4px ${
+                      filter: `drop-shadow(0 0 3px ${
                         employee.completion_rate >= 80 ? 'rgba(16, 185, 129, 0.6)' : 
                         employee.completion_rate >= 60 ? 'rgba(245, 158, 11, 0.6)' : 
                         'rgba(239, 68, 68, 0.6)'
@@ -878,17 +878,17 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
                   )}
                 </div>
               </div>
-              <p className={`text-xs font-medium mt-2 ${
+              <p className={`text-xs font-medium mt-1 sm:mt-2 ${
                 employee.completion_rate >= 80 ? 'text-green-600 dark:text-green-400' :
                 employee.completion_rate >= 60 ? 'text-amber-600 dark:text-amber-400' :
                 'text-red-600 dark:text-red-400'
               }`}>
-                {employee.completed_courses}/{employee.total_courses} courses
+                {employee.completed_courses}/{employee.total_courses}
               </p>
             </div>
             
             <svg 
-              className={`w-6 h-6 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+              className={`w-5 h-5 sm:w-6 sm:h-6 text-slate-400 transition-transform duration-300 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -899,21 +899,21 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
         </div>
       </button>
       
-      {/* Expanded Course Details - Animated */}
+      {/* Expanded Course Details - Animated with Glassmorphism */}
       <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="border-t border-slate-200 dark:border-slate-700 p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/30">
+        <div className="border-t border-slate-200 dark:border-slate-700 p-3 sm:p-4 bg-gradient-to-br from-slate-50/80 to-slate-100/80 dark:from-slate-800/50 dark:to-slate-700/30 backdrop-blur-sm">
           {/* Employee Stats Summary */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="bg-white dark:bg-slate-800 p-3 rounded-lg text-center">
-              <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{employee.total_courses}</div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2 sm:p-3 rounded-lg text-center shadow-sm">
+              <div className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">{employee.total_courses}</div>
               <div className="text-xs text-slate-600 dark:text-slate-400">Total</div>
             </div>
-            <div className="bg-white dark:bg-slate-800 p-3 rounded-lg text-center">
-              <div className="text-xl font-bold text-green-600 dark:text-green-400">{employee.completed_courses}</div>
+            <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2 sm:p-3 rounded-lg text-center shadow-sm">
+              <div className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">{employee.completed_courses}</div>
               <div className="text-xs text-slate-600 dark:text-slate-400">Completed</div>
             </div>
-            <div className="bg-white dark:bg-slate-800 p-3 rounded-lg text-center">
-              <div className="text-xl font-bold text-orange-600 dark:text-orange-400">{employee.in_progress}</div>
+            <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2 sm:p-3 rounded-lg text-center shadow-sm">
+              <div className="text-lg sm:text-xl font-bold text-orange-600 dark:text-orange-400">{employee.in_progress}</div>
               <div className="text-xs text-slate-600 dark:text-slate-400">In Progress</div>
             </div>
           </div>
