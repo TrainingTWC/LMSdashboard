@@ -323,10 +323,14 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                       </div>
                     </div>
                     
-                    {/* Mini Progress Ring */}
+                    {/* Mini Progress Ring - Enhanced */}
                     <div className="relative w-12 h-12">
-                      <svg className="w-12 h-12 transform -rotate-90">
-                        <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="4" className="text-slate-200 dark:text-slate-600" />
+                      {/* Glow effect */}
+                      <div className={`absolute inset-0 rounded-full blur-md opacity-20 ${
+                        completedInCategory === courses.length ? 'bg-green-400' : 'bg-blue-400'
+                      }`}></div>
+                      
+                      <svg className="w-12 h-12 transform -rotate-90 relative z-10">
                         <circle 
                           cx="24" 
                           cy="24" 
@@ -334,12 +338,30 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                           fill="none" 
                           stroke="currentColor" 
                           strokeWidth="4" 
-                          className={`${completedInCategory === courses.length ? 'text-green-500' : 'text-blue-500'}`}
+                          className="text-slate-200 dark:text-slate-700/50"
+                        />
+                        <circle 
+                          cx="24" 
+                          cy="24" 
+                          r="20" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="4" 
+                          className={`transition-all duration-700 ${
+                            completedInCategory === courses.length ? 'text-green-500' : 'text-blue-500'
+                          }`}
                           strokeDasharray={`${2 * Math.PI * 20 * completedInCategory / courses.length} ${2 * Math.PI * 20}`}
                           strokeLinecap="round"
+                          style={{
+                            filter: `drop-shadow(0 0 3px ${
+                              completedInCategory === courses.length ? 'rgba(34, 197, 94, 0.5)' : 'rgba(59, 130, 246, 0.5)'
+                            })`
+                          }}
                         />
                       </svg>
-                      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <span className={`absolute inset-0 flex items-center justify-center text-xs font-bold z-20 ${
+                        completedInCategory === courses.length ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'
+                      }`}>
                         {courses.length}
                       </span>
                     </div>
@@ -447,18 +469,24 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                               )}
                             </div>
                             
-                            {/* Status Icon */}
+                            {/* Status Icon - Enhanced */}
                             <div className="ml-4">
                               {course.course_completion_status === 'Completed' ? (
-                                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                                  <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                  </svg>
+                                <div className="relative w-10 h-10">
+                                  {/* Glow effect for completed */}
+                                  <div className="absolute inset-0 rounded-full blur-md bg-green-400 opacity-30"></div>
+                                  <div className="relative w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-full flex items-center justify-center shadow-lg">
+                                    <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  </div>
                                 </div>
                               ) : (
                                 <div className="relative w-10 h-10">
-                                  <svg className="w-10 h-10 transform -rotate-90">
-                                    <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" strokeWidth="3" className="text-orange-200 dark:text-orange-900/30" />
+                                  {/* Glow effect for in progress */}
+                                  <div className="absolute inset-0 rounded-full blur-md bg-orange-400 opacity-20"></div>
+                                  
+                                  <svg className="w-10 h-10 transform -rotate-90 relative z-10">
                                     <circle 
                                       cx="20" 
                                       cy="20" 
@@ -466,12 +494,24 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                                       fill="none" 
                                       stroke="currentColor" 
                                       strokeWidth="3" 
-                                      className="text-orange-500"
+                                      className="text-orange-200 dark:text-orange-900/30"
+                                    />
+                                    <circle 
+                                      cx="20" 
+                                      cy="20" 
+                                      r="16" 
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      strokeWidth="3" 
+                                      className="text-orange-500 transition-all duration-700"
                                       strokeDasharray={`${2 * Math.PI * 16 * course.course_progress / 100} ${2 * Math.PI * 16}`}
                                       strokeLinecap="round"
+                                      style={{
+                                        filter: 'drop-shadow(0 0 3px rgba(249, 115, 22, 0.5))'
+                                      }}
                                     />
                                   </svg>
-                                  <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-orange-600 dark:text-orange-400">
+                                  <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-orange-600 dark:text-orange-400 z-20">
                                     {course.course_progress}%
                                   </span>
                                 </div>

@@ -727,22 +727,46 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
           <div className="flex items-center gap-4 ml-4">
             <div className="text-center">
               <div className={`relative w-16 h-16 sm:w-20 sm:h-20`}>
-                {/* Background circle */}
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle cx="40" cy="40" r="32" fill="none" stroke="currentColor" strokeWidth="6" className="text-slate-200 dark:text-slate-700" />
+                {/* Glow effect background */}
+                <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${
+                  employee.completion_rate >= 80 ? 'bg-green-400' : 
+                  employee.completion_rate >= 60 ? 'bg-amber-400' : 
+                  'bg-red-400'
+                }`}></div>
+                
+                {/* SVG Progress Circle */}
+                <svg className="w-full h-full transform -rotate-90 relative z-10">
+                  {/* Background circle with subtle shadow */}
                   <circle 
                     cx="40" 
                     cy="40" 
                     r="32" 
                     fill="none" 
-                    stroke="url(#gradient)" 
+                    stroke="currentColor" 
+                    strokeWidth="6" 
+                    className="text-slate-200 dark:text-slate-700/50"
+                  />
+                  {/* Progress circle with gradient and animation */}
+                  <circle 
+                    cx="40" 
+                    cy="40" 
+                    r="32" 
+                    fill="none" 
+                    stroke={`url(#gradient-${employee.employee_code})`}
                     strokeWidth="6" 
                     strokeDasharray={`${2 * Math.PI * 32 * employee.completion_rate / 100} ${2 * Math.PI * 32}`}
                     strokeLinecap="round"
-                    className="transition-all duration-500"
+                    className="transition-all duration-1000 ease-out drop-shadow-lg"
+                    style={{
+                      filter: `drop-shadow(0 0 4px ${
+                        employee.completion_rate >= 80 ? 'rgba(16, 185, 129, 0.6)' : 
+                        employee.completion_rate >= 60 ? 'rgba(245, 158, 11, 0.6)' : 
+                        'rgba(239, 68, 68, 0.6)'
+                      })`
+                    }}
                   />
                   <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient id={`gradient-${employee.employee_code}`} x1="0%" y1="0%" x2="100%" y2="100%">
                       {employee.completion_rate >= 80 ? (
                         <>
                           <stop offset="0%" stopColor="#10b981" />
@@ -762,15 +786,30 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
                     </linearGradient>
                   </defs>
                 </svg>
-                {/* Center text */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
-                    {employee.completion_rate}%
-                  </span>
+                
+                {/* Center text with icon */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+                  {employee.completion_rate === 100 ? (
+                    <svg className="w-8 h-8 text-green-500 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <span className={`text-xl sm:text-2xl font-bold ${
+                      employee.completion_rate >= 80 ? 'text-green-600 dark:text-green-400' :
+                      employee.completion_rate >= 60 ? 'text-amber-600 dark:text-amber-400' :
+                      'text-red-600 dark:text-red-400'
+                    }`}>
+                      {employee.completion_rate}%
+                    </span>
+                  )}
                 </div>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                {employee.completed_courses}/{employee.total_courses}
+              <p className={`text-xs font-medium mt-2 ${
+                employee.completion_rate >= 80 ? 'text-green-600 dark:text-green-400' :
+                employee.completion_rate >= 60 ? 'text-amber-600 dark:text-amber-400' :
+                'text-red-600 dark:text-red-400'
+              }`}>
+                {employee.completed_courses}/{employee.total_courses} courses
               </p>
             </div>
             
