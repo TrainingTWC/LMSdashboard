@@ -11,6 +11,12 @@ interface TrainerViewProps {
 const ITEMS_PER_PAGE = 20; // Show 20 employees at a time
 
 const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNames = {} }) => {
+  const parsePercent = (v: any) => {
+    if (v === null || v === undefined) return 0;
+    const raw = typeof v === 'string' ? v.replace(/%/g, '') : String(v);
+    const n = parseFloat(raw);
+    return isNaN(n) ? 0 : Math.round(n);
+  };
   // Normalize trainerCode and lookup display name case-insensitively
   const normalizedTrainerCodeUpper = trainerCode ? trainerCode.toUpperCase() : trainerCode;
   const normalizedTrainerCodeLower = trainerCode ? trainerCode.toLowerCase() : trainerCode;
@@ -622,7 +628,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                             </svg>
-                            <span>{course.course_progress}%</span>
+                            <span>{parsePercent(course.course_progress)}%</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -645,7 +651,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                             <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
                               <div 
                                 className="bg-gradient-to-r from-yellow-500 to-orange-500 h-full rounded-full transition-all duration-500"
-                                style={{ width: `${course.course_progress}%` }}
+                                style={{ width: `${parsePercent(course.course_progress)}%` }}
                               />
                             </div>
                           </div>

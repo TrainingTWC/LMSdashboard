@@ -8,6 +8,13 @@ interface EmployeeViewProps {
 }
 
 const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerged }) => {
+  // Helper to normalize progress values that may already include a '%' or be strings
+  const parsePercent = (v: any) => {
+    if (v === null || v === undefined) return 0;
+    const raw = typeof v === 'string' ? v.replace(/%/g, '') : String(v);
+    const n = parseFloat(raw);
+    return isNaN(n) ? 0 : Math.round(n);
+  };
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [isStatModalOpen, setIsStatModalOpen] = useState<boolean>(false);
   const [selectedStatType, setSelectedStatType] = useState<'total' | 'completed' | 'inProgress' | 'hours' | null>(null);
@@ -393,7 +400,7 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    In Progress ({course.course_progress}%)
+                                    In Progress ({parsePercent(course.course_progress)}%)
                                   </span>
                                 )}
                               </div>
@@ -486,34 +493,34 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                                   {/* Glow effect for in progress */}
                                   <div className="absolute inset-0 rounded-full blur-md bg-orange-400 opacity-20"></div>
                                   
-                                  <svg className="w-10 h-10 transform -rotate-90 relative z-10">
-                                    <circle 
-                                      cx="20" 
-                                      cy="20" 
-                                      r="16" 
-                                      fill="none" 
-                                      stroke="currentColor" 
-                                      strokeWidth="3" 
-                                      className="text-orange-200 dark:text-orange-900/30"
-                                    />
-                                    <circle 
-                                      cx="20" 
-                                      cy="20" 
-                                      r="16" 
-                                      fill="none" 
-                                      stroke="currentColor" 
-                                      strokeWidth="3" 
-                                      className="text-orange-500 transition-all duration-700"
-                                      strokeDasharray={`${2 * Math.PI * 16 * course.course_progress / 100} ${2 * Math.PI * 16}`}
-                                      strokeLinecap="round"
-                                      style={{
-                                        filter: 'drop-shadow(0 0 3px rgba(249, 115, 22, 0.5))'
-                                      }}
-                                    />
-                                  </svg>
-                                  <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-orange-600 dark:text-orange-400 z-20">
-                                    {course.course_progress}%
-                                  </span>
+                                    <svg className="w-10 h-10 transform -rotate-90 relative z-10">
+                                      <circle 
+                                        cx="20" 
+                                        cy="20" 
+                                        r="16" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        strokeWidth="3" 
+                                        className="text-orange-200 dark:text-orange-900/30"
+                                      />
+                                      <circle 
+                                        cx="20" 
+                                        cy="20" 
+                                        r="16" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        strokeWidth="3" 
+                                        className="text-orange-500 transition-all duration-700"
+                                        strokeDasharray={`${2 * Math.PI * 16 * parsePercent(course.course_progress) / 100} ${2 * Math.PI * 16}`}
+                                        strokeLinecap="round"
+                                        style={{
+                                          filter: 'drop-shadow(0 0 3px rgba(249, 115, 22, 0.5))'
+                                        }}
+                                      />
+                                    </svg>
+                                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-orange-600 dark:text-orange-400 z-20">
+                                      {parsePercent(course.course_progress)}%
+                                    </span>
                                 </div>
                               )}
                             </div>
@@ -613,7 +620,7 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
                             : 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
                         }`}>
-                          {course.course_completion_status === 'Completed' ? '✓ Completed' : `${course.course_progress}% Progress`}
+                          {course.course_completion_status === 'Completed' ? '✓ Completed' : `${parsePercent(course.course_progress)}% Progress`}
                         </span>
                       </div>
                       
@@ -621,7 +628,7 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                         <div className="mb-3">
                           <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
                             <span>Progress</span>
-                            <span className="font-medium">{course.course_progress}%</span>
+                            <span className="font-medium">{parsePercent(course.course_progress)}%</span>
                           </div>
                           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                             <div 
@@ -633,10 +640,10 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                       )}
                       
                       <div className="grid grid-cols-2 gap-2 text-sm mt-2">
-                        <div>
-                          <span className="text-gray-600 dark:text-gray-400">Type:</span>
-                          <div className="font-medium text-gray-900 dark:text-white">{course.course_type}</div>
-                        </div>
+                                      <div 
+                                        className="bg-gradient-to-r from-orange-500 to-amber-500 h-full rounded-full transition-all duration-500"
+                                        style={{ width: `${parsePercent(course.course_progress)}%` }}
+                                      />
                         <div>
                           <span className="text-gray-600 dark:text-gray-400">Hours:</span>
                           <div className="font-medium text-gray-900 dark:text-white">{course.course_completion_hours}</div>
