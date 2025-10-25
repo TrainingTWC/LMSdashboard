@@ -645,7 +645,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
                           employee.completion_rate >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
                           'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                         }`}>
-                          {employee.completion_rate}%
+                          {Math.round(employee.completion_rate)}%
                         </span>
                       </div>
                     </div>

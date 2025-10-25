@@ -312,7 +312,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                 </svg>
               </div>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-1">Avg. Rate</p>
-              <p className="text-2xl sm:text-3xl font-bold text-teal-600 dark:text-teal-400">{teamStats.avgCompletionRate}%</p>
+              <p className="text-2xl sm:text-3xl font-bold text-teal-600 dark:text-teal-400">{Math.round(teamStats.avgCompletionRate)}%</p>
             </div>
             {/* Background progress indicator */}
             <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 100 100">
@@ -671,7 +671,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                           employee.completion_rate >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
                           'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                         }`}>
-                          {employee.completion_rate}%
+                          {Math.round(employee.completion_rate)}%
                         </span>
                       </div>
                       
@@ -698,7 +698,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                       <div className="mt-3">
                         <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
                           <span>Progress</span>
-                          <span className="font-medium">{employee.completion_rate}%</span>
+                          <span className="font-medium">{Math.round(employee.completion_rate)}%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                           <div 
@@ -873,7 +873,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
                       employee.completion_rate >= 60 ? 'text-amber-600 dark:text-amber-400' :
                       'text-red-600 dark:text-red-400'
                     }`}>
-                      {employee.completion_rate}%
+                      {Math.round(employee.completion_rate)}%
                     </span>
                   )}
                 </div>

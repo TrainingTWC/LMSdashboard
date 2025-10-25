@@ -315,7 +315,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                   </svg>
                 </div>
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">Avg Completion</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.avgCompletionRate}%</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{Math.round(stats.avgCompletionRate)}%</p>
               </div>
               {/* Background circle progress */}
               <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 100 100">
@@ -466,7 +466,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                                 : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                             }`}
                           >
-                            {employee.completion_rate}%
+                            {Math.round(employee.completion_rate)}%
                           </span>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">{employee.designation}</p>
@@ -555,8 +555,8 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                         </defs>
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">
-                          {employee.completion_rate}%
+                          <span className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">
+                          {Math.round(employee.completion_rate)}%
                         </span>
                       </div>
                     </div>
@@ -760,7 +760,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                   </div>
                   
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl">
-                    <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">{stats.avgCompletionRate}%</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">{Math.round(stats.avgCompletionRate)}%</div>
                     <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">Avg. Completion</div>
                   </div>
 
@@ -802,7 +802,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                           employee.completion_rate >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
                           'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                         }`}>
-                          {employee.completion_rate}%
+                          {Math.round(employee.completion_rate)}%
                         </span>
                       </div>
                       
@@ -829,7 +829,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                       <div className="mt-3">
                         <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
                           <span>Progress</span>
-                          <span className="font-medium">{employee.completion_rate}%</span>
+                          <span className="font-medium">{Math.round(employee.completion_rate)}%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                           <div 
