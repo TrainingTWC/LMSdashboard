@@ -5,11 +5,12 @@ import { storeMappingData } from '../data/storeMapping';
 interface TrainerViewProps {
   data: (EmployeeTrainingRecord | MergedData)[];
   trainerCode: string;
+  trainerNames?: Record<string, string>;
 }
 
 const ITEMS_PER_PAGE = 20; // Show 20 employees at a time
 
-const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
+const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNames = {} }) => {
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [isStatModalOpen, setIsStatModalOpen] = useState<boolean>(false);
   const [selectedStatType, setSelectedStatType] = useState<'total' | 'highPerformers' | 'needsAttention' | null>(null);
@@ -234,7 +235,14 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
                 {roleName} Dashboard
               </h1>
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                ID: <span className="font-mono font-semibold">{trainerCode}</span>
+                {trainerNames[trainerCode] ? (
+                  <>
+                    <span className="font-bold text-lg">{trainerNames[trainerCode]}</span>
+                    <span className="ml-2 text-xs font-mono font-semibold">({trainerCode})</span>
+                  </>
+                ) : (
+                  <>ID: <span className="font-mono font-semibold">{trainerCode}</span></>
+                )}
                 {!hasFullAccess && (
                   <span className="ml-2 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full">
                     {trainerInfo.stores.length} Store{trainerInfo.stores.length !== 1 ? 's' : ''}
@@ -442,7 +450,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+                          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
                             {employee.employee_name}
                           </h3>
                           <span
@@ -781,7 +789,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode }) => {
                             {employee.employee_name.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900 dark:text-white">{employee.employee_name}</h4>
+                            <h4 className="text-lg font-bold text-gray-900 dark:text-white">{employee.employee_name}</h4>
                             <p className="text-sm text-gray-600 dark:text-gray-400">{employee.designation} • {employee.location}</p>
                           </div>
                         </div>

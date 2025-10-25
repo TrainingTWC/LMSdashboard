@@ -14,6 +14,20 @@ import { dataPersistenceService } from './services/dataPersistenceService';
 import { githubUploadService } from './services/githubUploadService';
 import { getConfigurationStatus } from './services/dataService';
 
+// Trainer name mapping
+const trainerNames: Record<string, string> = {
+  'H1761': 'Mahadev',
+  'H701': 'Mallika',
+  'H1697': 'Sheldon',
+  'H3595': 'Bhawna',
+  'H2595': 'Kailash',
+  'H3252': 'Priyanka',
+  'H1278': 'Viraj',
+  'H3247': 'Sunil',
+  'H541': 'Amritanshu',
+  'H3237': 'Karam',
+  'H2081': 'Sarit',
+};
 
 const App: React.FC = () => {
   const [data, setData] = useState<(EmployeeTrainingRecord | MergedData)[] | null>(null);
@@ -440,7 +454,7 @@ const App: React.FC = () => {
                 ) : userRole === 'manager' && userId ? (
                   <ManagerView data={data} managerCode={userId} isMerged={isMerged} />
                 ) : userRole === 'trainer' && userId ? (
-                  <TrainerView data={data} trainerCode={userId} />
+                  <TrainerView data={data} trainerCode={userId} trainerNames={trainerNames} />
                 ) : userRole === 'not-found' && userId ? (
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-600 rounded-2xl p-8 shadow-2xl text-center max-w-2xl mx-auto">
                     <div className="flex flex-col items-center">

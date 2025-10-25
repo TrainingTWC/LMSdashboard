@@ -770,7 +770,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-lg truncate">{employee.employee_name}</h3>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-lg sm:text-xl md:text-2xl truncate">{employee.employee_name}</h3>
                   <span className={`px-2 py-0.5 text-xs rounded-full font-medium whitespace-nowrap ${badge.color}`}>
                     {badge.text}
                   </span>
