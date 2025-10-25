@@ -45,7 +45,7 @@ const TrainerCompletionChart: React.FC<ChartProps> = ({ data }) => {
           <XAxis type="number" stroke="#64748b" domain={[0, 100]} unit="%" fontSize={12} fontWeight={500} />
           <YAxis type="category" dataKey="name" stroke="#64748b" width={80} fontSize={12} fontWeight={500} />
           <Tooltip 
-            formatter={(value: number, name: string, props: any) => [`${value.toFixed(1)}% (${props.payload.completed}/${props.payload.total})`, 'Completion Rate']}
+            formatter={(value: number, name: string, props: any) => [`${Math.round(value)}% (${props.payload.completed}/${props.payload.total})`, 'Completion Rate']}
             contentStyle={{ 
               backgroundColor: 'rgba(255, 255, 255, 0.95)', 
               backdropFilter: 'blur(10px)',
@@ -63,7 +63,7 @@ const TrainerCompletionChart: React.FC<ChartProps> = ({ data }) => {
               else if (rate >= 60) fillColor = '#f59e0b'; // Amber for medium
               return <Cell key={`cell-${index}`} fill={fillColor} />;
             })}
-            <LabelList dataKey="Completion Rate" position="right" formatter={(value: number) => `${value.toFixed(1)}%`} fontSize={12} fontWeight={600} />
+            <LabelList dataKey="Completion Rate" position="right" formatter={(value: number) => `${Math.round(value)}%`} fontSize={12} fontWeight={600} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

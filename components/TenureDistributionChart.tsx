@@ -92,7 +92,7 @@ const TenureDistributionChart: React.FC<ChartProps> = ({ data }) => {
           />
           <Tooltip 
             formatter={(value: number, name: string) => [
-              name === 'Completion Rate' ? `${value.toFixed(1)}%` : value.toLocaleString(),
+              name === 'Completion Rate' ? `${Math.round(value)}%` : value.toLocaleString(),
               name
             ]}
             labelFormatter={(label) => `Tenure: ${label}`}

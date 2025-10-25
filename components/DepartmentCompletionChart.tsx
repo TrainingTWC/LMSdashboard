@@ -67,7 +67,7 @@ const DepartmentCompletionChart: React.FC<ChartProps> = ({ data }) => {
           />
           <Tooltip 
             formatter={(value: number, name: string, props: any) => [
-              `${value.toFixed(1)}% (${props.payload.completed}/${props.payload.total})`,
+              `${Math.round(value)}% (${props.payload.completed}/${props.payload.total})`,
               'Completion Rate'
             ]}
             labelFormatter={(label) => `Department: ${label}`}

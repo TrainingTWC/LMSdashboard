@@ -519,46 +519,35 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
 
                   <div className="flex flex-col items-center justify-center gap-4 h-full">
                     {/* Circular Progress */}
-                    <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-                      <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="40" cy="40" r="32" fill="none" stroke="currentColor" strokeWidth="6" className="text-slate-200 dark:text-slate-700" />
-                        <circle 
-                          cx="40" 
-                          cy="40" 
-                          r="32" 
-                          fill="none" 
-                          stroke="url(#gradient-trainer)" 
-                          strokeWidth="6" 
-                          strokeDasharray={`${2 * Math.PI * 32 * employee.completion_rate / 100} ${2 * Math.PI * 32}`}
+                    <div className="relative w-12 h-12">
+                      {/* Glow effect */}
+                      <div className={`absolute inset-0 rounded-full blur-md opacity-20 ${
+                        employee.total_courses > 0 && employee.completed_courses === employee.total_courses ? 'bg-green-400' : 'bg-blue-400'
+                      }`}></div>
+
+                      <svg className="w-12 h-12 transform -rotate-90 relative z-10">
+                        <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="4" className="text-slate-200 dark:text-slate-700/50" />
+                        <circle
+                          cx="24"
+                          cy="24"
+                          r="20"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          strokeDasharray={`${2 * Math.PI * 20 * (employee.completion_rate / 100)} ${2 * Math.PI * 20}`}
                           strokeLinecap="round"
-                          className="transition-all duration-500"
+                          className={`transition-all duration-700 ${employee.total_courses > 0 && employee.completed_courses === employee.total_courses ? 'text-green-500' : 'text-blue-500'}`}
+                          style={{
+                            filter: `drop-shadow(0 0 3px ${employee.total_courses > 0 && employee.completed_courses === employee.total_courses ? 'rgba(34,197,94,0.5)' : 'rgba(59,130,246,0.5)'})`
+                          }}
                         />
-                        <defs>
-                          <linearGradient id="gradient-trainer" x1="0%" y1="0%" x2="100%" y2="100%">
-                            {employee.completion_rate >= 80 ? (
-                              <>
-                                <stop offset="0%" stopColor="#10b981" />
-                                <stop offset="100%" stopColor="#059669" />
-                              </>
-                            ) : employee.completion_rate >= 60 ? (
-                              <>
-                                <stop offset="0%" stopColor="#f59e0b" />
-                                <stop offset="100%" stopColor="#d97706" />
-                              </>
-                            ) : (
-                              <>
-                                <stop offset="0%" stopColor="#ef4444" />
-                                <stop offset="100%" stopColor="#dc2626" />
-                              </>
-                            )}
-                          </linearGradient>
-                        </defs>
                       </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">
-                          {Math.round(employee.completion_rate)}%
-                        </span>
-                      </div>
+
+                      <span className={`absolute inset-0 flex items-center justify-center text-xs font-bold z-20 ${
+                        employee.total_courses > 0 && employee.completed_courses === employee.total_courses ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'
+                      }`}>
+                        {Math.round(employee.completion_rate)}%
+                      </span>
                     </div>
 
                     <svg

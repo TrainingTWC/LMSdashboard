@@ -59,7 +59,7 @@ const RegionCompletionChart: React.FC<ChartProps> = ({ data }) => {
             fontWeight={500} 
           />
           <Tooltip 
-            formatter={(value: number, name: string, props: any) => [`${value.toFixed(1)}% (${props.payload.completed}/${props.payload.total})`, 'Completion Rate']}
+            formatter={(value: number, name: string, props: any) => [`${Math.round(value)}% (${props.payload.completed}/${props.payload.total})`, 'Completion Rate']}
             contentStyle={{ 
               backgroundColor: 'rgba(255, 255, 255, 0.95)', 
               backdropFilter: 'blur(10px)',
@@ -81,7 +81,7 @@ const RegionCompletionChart: React.FC<ChartProps> = ({ data }) => {
             <LabelList 
               dataKey="Completion Rate" 
               position="right" 
-              formatter={(value: number) => `${value.toFixed(1)}%`} 
+              formatter={(value: number) => `${Math.round(value)}%`} 
               fontSize={10}
               fontWeight={600} 
             />

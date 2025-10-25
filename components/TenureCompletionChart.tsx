@@ -84,8 +84,8 @@ const TenureCompletionChart: React.FC<ChartProps> = ({ data }) => {
           <Tooltip 
             formatter={(value: number, name: string, props: any) => {
               if (name === 'Completion Rate') {
-                return [`${value.toFixed(1)}% (${props.payload.Completed}/${props.payload['Total Enrollments']})`, name];
-              }
+                  return [`${Math.round(value)}% (${props.payload.Completed}/${props.payload['Total Enrollments']})`, name];
+                }
               return [value.toLocaleString(), name];
             }}
             labelFormatter={(label) => `Tenure: ${label}`}
@@ -111,7 +111,7 @@ const TenureCompletionChart: React.FC<ChartProps> = ({ data }) => {
               else if (rate >= 60) fillColor = '#f59e0b'; // Amber for medium
               return <Cell key={`cell-${index}`} fill={fillColor} />;
             })}
-            <LabelList dataKey="Completion Rate" position="top" formatter={(value: number) => `${value.toFixed(1)}%`} fontSize={12} fontWeight={600} />
+            <LabelList dataKey="Completion Rate" position="top" formatter={(value: number) => `${Math.round(value)}%`} fontSize={12} fontWeight={600} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

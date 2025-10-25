@@ -48,7 +48,7 @@ const DesignationCompletionChart: React.FC<DesignationCompletionChartProps> = ({
         <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
           <p className="font-semibold text-slate-900 dark:text-white mb-2">{label}</p>
           <p className="text-slate-600 dark:text-slate-300">
-            <span className="font-medium">Completed:</span> {data.completed} ({data.percentage.toFixed(1)}%)
+            <span className="font-medium">Completed:</span> {data.completed} ({Math.round(data.percentage)}%)
           </p>
           <p className="text-slate-600 dark:text-slate-300">
             <span className="font-medium">Total:</span> {data.total}

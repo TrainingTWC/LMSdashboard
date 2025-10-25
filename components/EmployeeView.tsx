@@ -36,7 +36,7 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
       totalCourses,
       completedCourses,
       inProgress: totalCourses - completedCourses,
-      completionRate: isNaN(completionRate) ? '0.0' : completionRate.toFixed(1),
+      completionRate: isNaN(completionRate) ? 0 : Math.round(completionRate),
       totalHours: isNaN(totalHours) ? '0.0' : totalHours.toFixed(1)
     };
   }, [employeeData]);
@@ -215,7 +215,7 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                 stroke="currentColor" 
                 strokeWidth="8" 
                 className="text-purple-600 dark:text-purple-400"
-                strokeDasharray={`${2 * Math.PI * 40 * parseFloat(stats.completionRate) / 100} ${2 * Math.PI * 40}`}
+                strokeDasharray={`${2 * Math.PI * 40 * stats.completionRate / 100} ${2 * Math.PI * 40}`}
                 strokeDashoffset={`${2 * Math.PI * 40 * 0.25}`}
                 strokeLinecap="round"
               />

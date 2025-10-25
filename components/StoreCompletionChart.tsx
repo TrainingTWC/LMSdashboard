@@ -57,7 +57,7 @@ const StoreCompletionChart: React.FC<ChartProps> = ({ data }) => {
               interval={0} 
             />
             <Tooltip 
-              formatter={(value: number, name: string, props: any) => [`${value.toFixed(1)}% (${props.payload.completed}/${props.payload.total})`, 'Completion Rate']}
+              formatter={(value: number, name: string, props: any) => [`${Math.round(value)}% (${props.payload.completed}/${props.payload.total})`, 'Completion Rate']}
               contentStyle={{ 
                 backgroundColor: 'rgba(255, 255, 255, 0.95)', 
                 backdropFilter: 'blur(10px)',
@@ -79,7 +79,7 @@ const StoreCompletionChart: React.FC<ChartProps> = ({ data }) => {
               <LabelList 
                 dataKey="Completion Rate" 
                 position="right" 
-                formatter={(value: number) => `${value.toFixed(1)}%`} 
+                formatter={(value: number) => `${Math.round(value)}%`} 
                 fontSize={isMobile ? 9 : 11} 
                 fontWeight={600}
               />
