@@ -320,10 +320,9 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 text-slate-800 dark:text-slate-200 transition-colors duration-300">
       <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-3 sm:py-6 lg:py-8 max-w-7xl">
         <header className="mb-4 sm:mb-6 lg:mb-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-          <div className="flex items-start justify-between gap-3 sm:gap-4">
+          <div className="flex items-center justify-between gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold bg-gradient-to-r from-brand-primary via-teal-500 to-emerald-500 bg-clip-text text-transparent mb-1 sm:mb-2 leading-tight">ZingLearn Completion Dashboard</h1>
-              <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm lg:text-base leading-relaxed">Comprehensive analytics for learning management completion tracking</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold bg-gradient-to-r from-brand-primary via-teal-500 to-emerald-500 bg-clip-text text-transparent leading-tight">ZingLearn Completion Dashboard</h1>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {/* Reload Data Button - Mobile Optimized */}
