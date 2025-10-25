@@ -407,18 +407,18 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                               
                               {/* Progress Bar for In Progress Courses */}
                               {course.course_completion_status !== 'Completed' && (
-                                <div className="mb-3">
-                                  <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
-                                    <span>Progress</span>
-                                    <span className="font-medium">{course.course_progress}%</span>
+                                  <div className="mb-3">
+                                    <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
+                                      <span>Progress</span>
+                                      <span className="font-medium">{parsePercent(course.course_progress)}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                                      <div 
+                                        className="bg-gradient-to-r from-orange-500 to-amber-500 h-full rounded-full transition-all duration-500"
+                                        style={{ width: `${parsePercent(course.course_progress)}%` }}
+                                      />
+                                    </div>
                                   </div>
-                                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-                                    <div 
-                                      className="bg-gradient-to-r from-orange-500 to-amber-500 h-full rounded-full transition-all duration-500"
-                                      style={{ width: `${course.course_progress}%` }}
-                                    />
-                                  </div>
-                                </div>
                               )}
                               
                               {/* Expanded Course Details */}
@@ -640,10 +640,10 @@ const EmployeeView: React.FC<EmployeeViewProps> = ({ data, employeeCode, isMerge
                       )}
                       
                       <div className="grid grid-cols-2 gap-2 text-sm mt-2">
-                                      <div 
-                                        className="bg-gradient-to-r from-orange-500 to-amber-500 h-full rounded-full transition-all duration-500"
-                                        style={{ width: `${parsePercent(course.course_progress)}%` }}
-                                      />
+                        <div>
+                          <span className="text-gray-600 dark:text-gray-400">Type:</span>
+                          <div className="font-medium text-gray-900 dark:text-white">{course.course_type}</div>
+                        </div>
                         <div>
                           <span className="text-gray-600 dark:text-gray-400">Hours:</span>
                           <div className="font-medium text-gray-900 dark:text-white">{course.course_completion_hours}</div>
