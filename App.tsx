@@ -40,6 +40,7 @@ const App: React.FC = () => {
   const [dataSource, setDataSource] = useState<'googleSheets' | 'none'>('none');
   const [userRole, setUserRole] = useState<'employee' | 'manager' | 'trainer' | 'admin' | 'not-found'>('admin');
   const [userId, setUserId] = useState<string | null>(null);
+  const [showScopedOverview, setShowScopedOverview] = useState<boolean>(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
     if (typeof window !== 'undefined') {
@@ -129,6 +130,64 @@ const App: React.FC = () => {
       setUserRole('admin');
     }
   }, [userId, data]);
+
+  // Auto-open scoped admin overview for managers/trainers when role is set
+  useEffect(() => {
+    // Do not auto-open the scoped overview modal anymore.
+    // The scoped overview is now exposed via tabs inside Manager/Trainer views.
+    setShowScopedOverview(false);
+  }, [userRole, userId, data]);
+
+  // Helper to produce manager-scoped data (all records for manager and their subordinates)
+  const getManagerScopedData = (managerId: string, allData: (EmployeeTrainingRecord | MergedData)[]) => {
+    if (!managerId || !allData || allData.length === 0) return [];
+    const normalizedManagerId = managerId.toLowerCase();
+    const allReports = new Set<string>();
+
+    const findAllSubordinates = (mgrId: string) => {
+      const nm = mgrId.toLowerCase();
+      allData.forEach(record => {
+        if (record.reporting_manager_code && record.reporting_manager_code.toLowerCase() === nm) {
+          const code = record.employee_code.toLowerCase();
+          if (!allReports.has(code)) {
+            allReports.add(code);
+            findAllSubordinates(record.employee_code);
+          }
+        }
+      });
+    };
+
+    // start with direct reports
+    findAllSubordinates(normalizedManagerId);
+    // include manager themselves
+    allReports.add(normalizedManagerId);
+
+    return allData.filter(r => allReports.has((r.employee_code || '').toLowerCase()));
+  };
+
+  // Helper to produce trainer-scoped data (records for stores managed by trainer)
+  const getTrainerScopedData = (trainerId: string, allData: (EmployeeTrainingRecord | MergedData)[]) => {
+    if (!trainerId || !allData || allData.length === 0) return [];
+    const normalizedTrainer = trainerId.toLowerCase();
+    // Find Store IDs for this trainer from storeMappingData
+    const stores = storeMappingData.filter(s => (
+      (s.Trainer || '').toLowerCase() === normalizedTrainer ||
+      (s['E-Learning Specialist'] || '').toLowerCase() === normalizedTrainer ||
+      (s['Training Head'] || '').toLowerCase() === normalizedTrainer ||
+      (s['HR Head'] || '').toLowerCase() === normalizedTrainer
+    ));
+    const storeIds = new Set(stores.map(s => s['Store ID']));
+
+    // If merged data has Store ID, filter by it; otherwise try location/trainer field
+    return allData.filter(r => {
+      const storeId = (r as any)['Store ID'];
+      if (storeId && storeIds.size > 0) return storeIds.has(storeId);
+      // fallback: check merged Trainer field
+      const trainerField = (r as any).Trainer;
+      if (trainerField && typeof trainerField === 'string') return trainerField.toLowerCase() === normalizedTrainer;
+      return false;
+    });
+  };
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
@@ -416,6 +475,38 @@ const App: React.FC = () => {
                 </div>
               </div>
             </div>
+          )}
+          {/* Scoped Admin Overview Modal for Manager/Trainer */}
+          {showScopedOverview && userId && data && (
+            (userRole === 'manager' && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[96vh] overflow-auto">
+                  <div className="sticky top-0 z-20 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Manager Overview (Scoped)</h3>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setShowScopedOverview(false)} className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">Close</button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <TabbedDashboard data={getManagerScopedData(userId, data)} fileName={`${fileName} (Manager Scope)`} isMerged={isMerged} />
+                  </div>
+                </div>
+              </div>
+            )) || (userRole === 'trainer' && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[96vh] overflow-auto">
+                  <div className="sticky top-0 z-20 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trainer Overview (Scoped)</h3>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setShowScopedOverview(false)} className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">Close</button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <TabbedDashboard data={getTrainerScopedData(userId, data)} fileName={`${fileName} (Trainer Scope)`} isMerged={isMerged} />
+                  </div>
+                </div>
+              </div>
+            ))
           )}
           
           {showAdminPanel && isAdmin && (

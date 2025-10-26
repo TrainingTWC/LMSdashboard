@@ -9,7 +9,13 @@ interface ChartProps {
 
 const RegionCompletionChart: React.FC<ChartProps> = ({ data }) => {
   const regionData = data.reduce((acc, record) => {
-    const region = record.Region || 'Unknown';
+    const region = record.Region || '';
+    
+    // Skip empty regions
+    if (!region || region.trim() === '' || region.toLowerCase() === 'unknown') {
+      return acc;
+    }
+    
     if (!acc[region]) {
       acc[region] = { total: 0, completed: 0 };
     }
@@ -34,7 +40,9 @@ const RegionCompletionChart: React.FC<ChartProps> = ({ data }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </div>
-        <h3 className="text-sm sm:text-base lg:text-xl font-bold text-slate-800 dark:text-slate-200">Regional Performance</h3>
+        <h3 className="text-sm sm:text-base lg:text-xl font-bold text-slate-800 dark:text-slate-200">
+          Regional Performance
+        </h3>
       </div>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart
@@ -70,7 +78,10 @@ const RegionCompletionChart: React.FC<ChartProps> = ({ data }) => {
             }}
             cursor={{fill: 'rgba(20, 184, 166, 0.1)'}}
           />
-          <Bar dataKey="Completion Rate" radius={[0, 4, 4, 0]}>
+          <Bar 
+            dataKey="Completion Rate" 
+            radius={[0, 4, 4, 0]}
+          >
             {chartData.map((entry, index) => {
               const rate = entry['Completion Rate'];
               let fillColor = '#ef4444'; // Red for low (default)

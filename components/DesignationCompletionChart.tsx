@@ -12,7 +12,12 @@ const DesignationCompletionChart: React.FC<DesignationCompletionChartProps> = ({
     const designationStats: Record<string, { total: number; completed: number }> = {};
 
     data.forEach(item => {
-      const designation = item.designation || 'Unknown';
+      const designation = item.designation || '';
+      
+      // Skip empty designations
+      if (!designation || designation.trim() === '' || designation.toLowerCase() === 'unknown') {
+        return;
+      }
       
       if (!designationStats[designation]) {
         designationStats[designation] = { total: 0, completed: 0 };
@@ -75,7 +80,9 @@ const DesignationCompletionChart: React.FC<DesignationCompletionChartProps> = ({
 
   return (
     <div className={`bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-6 ${className}`}>
-      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Completion by Designation</h3>
+      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+        Completion by Designation
+      </h3>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -96,7 +103,10 @@ const DesignationCompletionChart: React.FC<DesignationCompletionChartProps> = ({
               className="fill-slate-600 dark:fill-slate-300"
             />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="percentage" radius={[4, 4, 0, 0]}>
+            <Bar 
+              dataKey="percentage" 
+              radius={[4, 4, 0, 0]}
+            >
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(entry.percentage)} />
               ))}

@@ -10,6 +10,20 @@ interface ManagerViewProps {
 const ITEMS_PER_PAGE = 20; // Show 20 employees at a time
 
 const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }) => {
+  // Helper to normalize progress values coming from CSV/JSON which may be strings like '59.09%' or numbers
+  const parsePercent = (val: any): number => {
+    if (val == null) return 0;
+    if (typeof val === 'number') return Math.round(val);
+    try {
+      const s = String(val).trim();
+      // remove extra % characters and whitespace
+      const cleaned = s.replace(/%/g, '').trim();
+      const n = parseFloat(cleaned);
+      return isNaN(n) ? 0 : Math.round(n);
+    } catch (e) {
+      return 0;
+    }
+  };
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [isStatModalOpen, setIsStatModalOpen] = useState<boolean>(false);
@@ -92,7 +106,8 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
         course_category: record.course_category,
         course_type: record.course_type,
         completion_status: record.course_completion_status,
-        progress: record.course_progress,
+        // Normalize progress to integer percent to avoid double-percent or decimal formatting issues
+        progress: parsePercent(record.course_progress),
         hours: record.course_completion_hours,
         enrollment_date: record.course_enrolment_date,
         completion_date: record.course_completion_date,
@@ -141,6 +156,35 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
       needsAttention
     };
   }, [teamMembers, managerCode]);
+
+  // Determine color variant for average completion rate
+  const getRateVariant = (rate: number) => {
+    if (rate >= 80) {
+      return {
+        textClass: 'text-green-600 dark:text-green-400',
+        bgGradient: 'from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20',
+        svgBg: '#86efac',
+        svgStroke: '#059669',
+        glow: 'bg-green-400'
+      };
+    }
+    if (rate >= 60) {
+      return {
+        textClass: 'text-yellow-600 dark:text-yellow-400',
+        bgGradient: 'from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20',
+        svgBg: '#fde68a',
+        svgStroke: '#d97706',
+        glow: 'bg-amber-400'
+      };
+    }
+    return {
+      textClass: 'text-red-600 dark:text-red-400',
+      bgGradient: 'from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20',
+      svgBg: '#feb2b2',
+      svgStroke: '#dc2626',
+      glow: 'bg-red-400'
+    };
+  };
 
   // Group team members by reporting level with filtering
   const teamLevels = useMemo(() => {
@@ -304,32 +348,65 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
           </div>
           
           {/* Average Rate Card */}
-          <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-lg border border-teal-200/50 dark:border-teal-800/50 relative overflow-hidden">
+          <div className={`bg-gradient-to-br p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-lg border relative overflow-hidden ${getRateVariant(Math.round(teamStats.avgCompletionRate)).bgGradient} border-teal-200/50 dark:border-teal-800/50`}>
             <div className="flex flex-col items-center text-center relative z-10">
               <div className="mb-2 p-2 bg-teal-500/10 rounded-lg">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
+                {(() => {
+                  const r = Math.round(teamStats.avgCompletionRate);
+                  // Happy (>=80), Neutral (60-79), Sad (<60)
+                  if (r >= 80) {
+                    return (
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                        <circle cx="9" cy="10" r="1" fill="currentColor" />
+                        <circle cx="15" cy="10" r="1" fill="currentColor" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 15c1.333 1 2.667 1 4 0" />
+                      </svg>
+                    );
+                  }
+                  if (r >= 60) {
+                    return (
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                        <circle cx="9" cy="10" r="1" fill="currentColor" />
+                        <circle cx="15" cy="10" r="1" fill="currentColor" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 15h8" />
+                      </svg>
+                    );
+                  }
+                  return (
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="9" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="9" cy="10" r="1" fill="currentColor" />
+                      <circle cx="15" cy="10" r="1" fill="currentColor" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 15c-1.333-1-2.667-1-4 0" />
+                    </svg>
+                  );
+                })()}
               </div>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-1">Avg. Rate</p>
-              <p className="text-2xl sm:text-3xl font-bold text-teal-600 dark:text-teal-400">{Math.round(teamStats.avgCompletionRate)}%</p>
+              <p className={`text-2xl sm:text-3xl font-bold ${getRateVariant(Math.round(teamStats.avgCompletionRate)).textClass}`}>{Math.round(teamStats.avgCompletionRate)}%</p>
             </div>
             {/* Background progress indicator */}
-            <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="8" className="text-teal-300 dark:text-teal-700" />
-              <circle 
-                cx="50" 
-                cy="50" 
-                r="40" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="8" 
-                className="text-teal-600 dark:text-teal-400"
-                strokeDasharray={`${2 * Math.PI * 40 * teamStats.avgCompletionRate / 100} ${2 * Math.PI * 40}`}
-                strokeDashoffset={`${2 * Math.PI * 40 * 0.25}`}
-                strokeLinecap="round"
-              />
-            </svg>
+            {(() => {
+              const variant = getRateVariant(Math.round(teamStats.avgCompletionRate));
+              return (
+                <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" fill="none" stroke={variant.svgBg} strokeWidth="8" />
+                  <circle 
+                    cx="50" 
+                    cy="50" 
+                    r="40" 
+                    fill="none" 
+                    stroke={variant.svgStroke} 
+                    strokeWidth="8" 
+                    strokeDasharray={`${2 * Math.PI * 40 * teamStats.avgCompletionRate / 100} ${2 * Math.PI * 40}`}
+                    strokeDashoffset={`${2 * Math.PI * 40 * 0.25}`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+              );
+            })()}
           </div>
           
           {/* Total Hours Card */}
@@ -628,8 +705,8 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
                     <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">Total Count</div>
                   </div>
                   
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl">
-                    <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">{teamStats.avgCompletionRate}%</div>
+                  <div className={`p-4 rounded-xl`}>
+                    <div className={`text-2xl sm:text-3xl font-bold ${getRateVariant(teamStats.avgCompletionRate).textClass}`}>{teamStats.avgCompletionRate}%</div>
                     <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">Avg. Completion</div>
                   </div>
 

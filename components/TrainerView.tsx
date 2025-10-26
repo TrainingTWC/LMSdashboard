@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { EmployeeTrainingRecord, MergedData } from '../types';
+import Dashboard from './Dashboard';
 import { storeMappingData } from '../data/storeMapping';
 
 interface TrainerViewProps {
@@ -24,9 +25,34 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [isStatModalOpen, setIsStatModalOpen] = useState<boolean>(false);
   const [selectedStatType, setSelectedStatType] = useState<'total' | 'highPerformers' | 'needsAttention' | null>(null);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'overall'>('dashboard');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterStore, setFilterStore] = useState<string>('all');
+  const [filterRegion, setFilterRegion] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [storeSearchTerm, setStoreSearchTerm] = useState<string>('');
+  const [isStoreDropdownOpen, setIsStoreDropdownOpen] = useState<boolean>(false);
+
+  // Ref for store dropdown to handle click outside
+  const storeDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (storeDropdownRef.current && !storeDropdownRef.current.contains(event.target as Node)) {
+        setIsStoreDropdownOpen(false);
+        setStoreSearchTerm('');
+      }
+    };
+
+    if (isStoreDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isStoreDropdownOpen]);
 
   // Get trainer info and their stores
   const trainerInfo = useMemo(() => {
@@ -153,15 +179,45 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
       employees = employees.filter(emp => emp.location === filterStore);
     }
     
+    // Apply region filter
+    if (filterRegion !== 'all') {
+      employees = employees.filter(emp => {
+        const storeData = storeMappingData.find(s => s.location === emp.location);
+        return storeData?.Region === filterRegion;
+      });
+    }
+    
     return employees.sort((a, b) => 
       a.employee_name.localeCompare(b.employee_name)
     );
-  }, [filteredData, searchTerm, filterStore]);
+  }, [filteredData, searchTerm, filterStore, filterRegion]);
 
   // Get unique stores for filter
   const uniqueStores = useMemo(() => {
     const stores = new Set(filteredData.map(item => (item as MergedData).location).filter(Boolean));
     return Array.from(stores).sort();
+  }, [filteredData]);
+
+  // Filter stores based on search term
+  const filteredStores = useMemo(() => {
+    if (!storeSearchTerm) return uniqueStores;
+    return uniqueStores.filter(store => 
+      store.toLowerCase().includes(storeSearchTerm.toLowerCase())
+    );
+  }, [uniqueStores, storeSearchTerm]);
+
+  // Get unique regions for filter
+  const uniqueRegions = useMemo(() => {
+    const regions = new Set(
+      filteredData
+        .map(item => {
+          const location = (item as MergedData).location;
+          const storeData = storeMappingData.find(s => s.location === location);
+          return storeData?.Region;
+        })
+        .filter(Boolean)
+    );
+    return Array.from(regions).sort();
   }, [filteredData]);
 
   // Handle stat card clicks
@@ -209,7 +265,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
   // Reset to page 1 when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStore]);
+  }, [searchTerm, filterStore, filterRegion]);
 
   if (employeeData.length === 0) {
     return (
@@ -377,11 +433,46 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
           </div>
         </div>
 
-        {/* Search and Filter Bar */}
+        {/* Tabs: switch between trainer dashboard and overall scoped dashboard */}
         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-indigo-200/50 dark:border-indigo-700/50">
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search Input */}
-            <div className="flex-1 relative">
+          <div className="flex items-center gap-2 mb-4">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'dashboard'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+              }`}
+            >
+              Emp. Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab('overall')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'overall'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+              }`}
+            >
+              Overall Dashboard
+            </button>
+          </div>
+
+          {activeTab === 'overall' && (
+            <Dashboard
+              data={filteredData as any}
+              fileName={`Overall - ${trainerCode}`}
+              isMerged={Boolean((filteredData as any)[0] && (filteredData as any)[0]['Store ID'])}
+            />
+          )}
+
+          {activeTab === 'dashboard' && (
+            <>
+              {/* Search and Filter Bar */}
+              <div className="mb-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Search Input */}
+                  <div className="flex-1 relative">
               <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -404,20 +495,81 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
               )}
             </div>
             
-            {/* Store Filter */}
+            {/* Store Filter - Searchable */}
             {uniqueStores.length > 1 && (
+              <div ref={storeDropdownRef} className="relative min-w-[180px]">
+                <button
+                  onClick={() => setIsStoreDropdownOpen(!isStoreDropdownOpen)}
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all flex items-center justify-between"
+                >
+                  <span className="truncate">{filterStore === 'all' ? 'All Stores' : filterStore}</span>
+                  <svg className={`w-4 h-4 ml-2 transition-transform ${isStoreDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isStoreDropdownOpen && (
+                  <div className="absolute z-50 mt-1 w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                    <div className="p-2 border-b border-slate-200 dark:border-slate-600">
+                      <input
+                        type="text"
+                        placeholder="Search stores..."
+                        value={storeSearchTerm}
+                        onChange={(e) => setStoreSearchTerm(e.target.value)}
+                        className="w-full px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      <button
+                        onClick={() => {
+                          setFilterStore('all');
+                          setIsStoreDropdownOpen(false);
+                          setStoreSearchTerm('');
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors ${
+                          filterStore === 'all' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium' : 'text-slate-800 dark:text-slate-200'
+                        }`}
+                      >
+                        All Stores
+                      </button>
+                      {filteredStores.map(store => (
+                        <button
+                          key={store}
+                          onClick={() => {
+                            setFilterStore(store);
+                            setIsStoreDropdownOpen(false);
+                            setStoreSearchTerm('');
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors ${
+                            filterStore === store ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium' : 'text-slate-800 dark:text-slate-200'
+                          }`}
+                        >
+                          {store}
+                        </button>
+                      ))}
+                      {filteredStores.length === 0 && (
+                        <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+                          No stores found
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Region Filter */}
+            {uniqueRegions.length > 1 && (
               <select
-                value={filterStore}
-                onChange={(e) => setFilterStore(e.target.value)}
+                value={filterRegion}
+                onChange={(e) => setFilterRegion(e.target.value)}
                 className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all min-w-[150px]"
               >
-                <option value="all">All Stores ({filteredData.length})</option>
-                {uniqueStores.map(store => {
-                  const count = filteredData.filter(item => (item as MergedData).location === store).length;
-                  return (
-                    <option key={store} value={store}>{store} ({count})</option>
-                  );
-                })}
+                <option value="all">All Regions</option>
+                {uniqueRegions.map(region => (
+                  <option key={region} value={region}>{region}</option>
+                ))}
               </select>
             )}
           </div>
@@ -706,6 +858,9 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
             </div>
           </div>
         )}
+      </>
+        )}
+        </div>
 
         {/* Stat Card Detail Modal */}
         {isStatModalOpen && selectedStatType && (

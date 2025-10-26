@@ -293,6 +293,13 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
     return isNaN(average) ? '0' : average.toString();
   };
 
+  // Color variant helper for average completion
+  const getRateVariant = (rate: number) => {
+    if (rate >= 80) return { textClass: 'text-green-600 dark:text-green-400' };
+    if (rate >= 60) return { textClass: 'text-yellow-600 dark:text-yellow-400' };
+    return { textClass: 'text-red-600 dark:text-red-400' };
+  };
+
   // Calculate performance groups
   const highPerformers = filteredEmployees.filter(emp => emp.completionRate >= 80);
   const averagePerformers = filteredEmployees.filter(emp => emp.completionRate >= 60 && emp.completionRate < 80);
@@ -600,11 +607,39 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
           className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-6 rounded-2xl shadow-xl border border-yellow-200/50 dark:border-yellow-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl group"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-4 p-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-xl group-hover:from-yellow-500/20 group-hover:to-orange-500/20 transition-all duration-300">
-              <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
+                <div className="mb-4 p-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-xl group-hover:from-yellow-500/20 group-hover:to-orange-500/20 transition-all duration-300">
+                  {(() => {
+                    const avg = Number(getAverageCompletion(averagePerformers));
+                    if (avg >= 80) {
+                      return (
+                        <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="9" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                          <circle cx="9" cy="10" r="1" fill="currentColor" />
+                          <circle cx="15" cy="10" r="1" fill="currentColor" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 15c1.333 1 2.667 1 4 0" />
+                        </svg>
+                      );
+                    }
+                    if (avg >= 60) {
+                      return (
+                        <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="9" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                          <circle cx="9" cy="10" r="1" fill="currentColor" />
+                          <circle cx="15" cy="10" r="1" fill="currentColor" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 15h8" />
+                        </svg>
+                      );
+                    }
+                    return (
+                      <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                        <circle cx="9" cy="10" r="1" fill="currentColor" />
+                        <circle cx="15" cy="10" r="1" fill="currentColor" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 15c-1.333-1-2.667-1-4 0" />
+                      </svg>
+                    );
+                  })()}
+                </div>
             <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{averagePerformers.length}</p>
             <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Performers (60-79%)</p>
             <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Click for details →</p>
@@ -749,8 +784,13 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
                   <div className="text-sm text-gray-600 dark:text-gray-400">Total Count</div>
                 </div>
                 
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <div className={`p-4 rounded-xl`}>
+                  <div className={`text-2xl font-bold ${getRateVariant(Number(
+                    selectedStatType === 'total' ? getAverageCompletion(filteredEmployees) :
+                    selectedStatType === 'high' ? getAverageCompletion(highPerformers) :
+                    selectedStatType === 'average' ? getAverageCompletion(averagePerformers) :
+                    getAverageCompletion(needsAttention)
+                  )).textClass}`}>
                     {selectedStatType === 'total' && `${getAverageCompletion(filteredEmployees)}%`}
                     {selectedStatType === 'high' && `${getAverageCompletion(highPerformers)}%`}
                     {selectedStatType === 'average' && `${getAverageCompletion(averagePerformers)}%`}

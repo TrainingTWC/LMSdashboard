@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { EmployeeTrainingRecord, MergedData } from '../types';
 import { storeMappingData } from '../data/storeMapping';
 import StatCard from './StatCard';
@@ -37,10 +37,6 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
   const [trainerSearch, setTrainerSearch] = useState<string>('');
   const [courseSearch, setCourseSearch] = useState<string>('');
   const [designationSearch, setDesignationSearch] = useState<string>('');
-
-  // Modal states for clickable stat cards
-  const [isStatModalOpen, setIsStatModalOpen] = useState<boolean>(false);
-  const [selectedStatType, setSelectedStatType] = useState<'total' | 'high' | 'average' | 'needs-attention' | null>(null);
 
   // Tenure calculation function
   const calculateTenure = (dateOfJoining: string): string => {
@@ -147,12 +143,12 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
       emp.total_courses++;
       emp.courses.push({
         course_name: item.course_name,
-        completion_status: item.course_completion_status || item.completion_status,
-        completion_date: item.completion_date,
+        completion_status: item.course_completion_status,
+        completion_date: item.course_completion_date,
         course_end_date: item.course_end_date
       });
       
-      if ((item.course_completion_status || item.completion_status) === 'Completed') {
+      if (item.course_completion_status === 'Completed') {
         emp.completed_courses++;
       }
       emp.completion_rate = Math.round((emp.completed_courses / emp.total_courses) * 100);
@@ -165,16 +161,45 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
   const averagePerformers = employeeCompletionRates.filter(emp => emp.completion_rate >= 60 && emp.completion_rate < 80);
   const needsAttention = employeeCompletionRates.filter(emp => emp.completion_rate < 60);
 
-  // Handle stat card clicks
-  const handleStatCardClick = (statType: 'total' | 'high' | 'average' | 'needs-attention') => {
-    setSelectedStatType(statType);
-    setIsStatModalOpen(true);
-  };
+  // CSV Download function
+  const downloadEmployeeCSV = useCallback(() => {
+    // Create CSV header
+    const headers = ['Employee Code', 'Employee Name', 'Designation', 'Total Courses', 'Completed Courses', 'Completion Rate (%)'];
+    
+    // Create CSV rows
+    const rows = employeeCompletionRates.map(emp => [
+      emp.employee_code,
+      emp.employee_name,
+      emp.designation,
+      emp.total_courses,
+      emp.completed_courses,
+      emp.completion_rate
+    ]);
 
-  const closeStatModal = () => {
-    setIsStatModalOpen(false);
-    setSelectedStatType(null);
-  };
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => {
+        // Escape cells that contain commas or quotes
+        const cellStr = String(cell);
+        if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+          return `"${cellStr.replace(/"/g, '""')}"`;
+        }
+        return cellStr;
+      }).join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `employee_dashboard_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [employeeCompletionRates]);
 
   // Helper function to safely calculate and format percentages
   const formatPercentage = (numerator: number, denominator: number): string => {
@@ -189,6 +214,13 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
     const sum = employees.reduce((acc, emp) => acc + (emp.completion_rate || 0), 0);
     const average = Math.round(sum / employees.length);
     return isNaN(average) ? '0' : average.toString();
+  };
+
+  // Color variant helper for average completion
+  const getRateVariant = (rate: number) => {
+    if (rate >= 80) return { textClass: 'text-green-600 dark:text-green-400' };
+    if (rate >= 60) return { textClass: 'text-yellow-600 dark:text-yellow-400' };
+    return { textClass: 'text-red-600 dark:text-red-400' };
   };
 
   // Get active filter summary for display
@@ -216,6 +248,290 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
     if (activeFilters.length === 0) return 'All Data';
     if (activeFilters.length === 1) return activeFilters[0];
     return `${activeFilters.length} Filters Applied`;
+  };
+
+  // Store-wise Section Component
+  const StoreWiseSection: React.FC<{ data: MergedData[] }> = ({ data }) => {
+    const [expandedStore, setExpandedStore] = useState<string | null>(null);
+
+    const storeData = useMemo(() => {
+      const stores = new Map<string, { 
+        location: string;
+        employees: Set<string>;
+        totalCourses: number;
+        completedCourses: number;
+        trainers: Set<string>;
+        areaManager: string;
+      }>();
+
+      data.forEach(item => {
+        const store = item.location || 'Unknown';
+        if (!stores.has(store)) {
+          stores.set(store, {
+            location: store,
+            employees: new Set(),
+            totalCourses: 0,
+            completedCourses: 0,
+            trainers: new Set(),
+            areaManager: item.AM || 'Unknown'
+          });
+        }
+        
+        const storeInfo = stores.get(store)!;
+        storeInfo.employees.add(item.employee_code);
+        storeInfo.totalCourses++;
+        if (item.Trainer && item.Trainer !== 'TBD') {
+          storeInfo.trainers.add(item.Trainer);
+        }
+        if (item.course_completion_status === 'Completed') {
+          storeInfo.completedCourses++;
+        }
+      });
+
+      return Array.from(stores.values())
+        .map(store => ({
+          ...store,
+          employeeCount: store.employees.size,
+          completionRate: store.totalCourses > 0 
+            ? Math.round((store.completedCourses / store.totalCourses) * 100)
+            : 0,
+          trainerCount: store.trainers.size
+        }))
+        .sort((a, b) => b.completionRate - a.completionRate);
+    }, [data]);
+
+    const toggleStore = (storeName: string) => {
+      setExpandedStore(expandedStore === storeName ? null : storeName);
+    };
+
+    return (
+      <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+              Store-wise Performance
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {storeData.length} stores • Click to expand details
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {storeData.map((store, index) => (
+            <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleStore(store.location)}
+                className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+              >
+                <div className="flex items-center gap-4 flex-1">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${
+                    store.completionRate >= 80 ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
+                    store.completionRate >= 60 ? 'bg-gradient-to-br from-yellow-500 to-orange-600' :
+                    'bg-gradient-to-br from-red-500 to-pink-600'
+                  }`}>
+                    {store.location.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{store.location}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {store.employeeCount} employees • {store.trainerCount} trainer{store.trainerCount !== 1 ? 's' : ''} • AM: {store.areaManager}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className={`px-4 py-2 text-lg font-bold rounded-full ${
+                      store.completionRate >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                      store.completionRate >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                      'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                    }`}>
+                      {store.completionRate}%
+                    </span>
+                    <svg 
+                      className={`w-5 h-5 text-gray-400 transition-transform ${expandedStore === store.location ? 'rotate-180' : ''}`}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </button>
+              
+              {expandedStore === store.location && (
+                <div className="p-4 bg-gray-50 dark:bg-slate-700/30 border-t border-gray-200 dark:border-gray-700">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{store.employeeCount}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Employees</div>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{store.totalCourses}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Total Courses</div>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">{store.completedCourses}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Completed</div>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{store.trainerCount}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Trainers</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Trainer-wise Section Component
+  const TrainerWiseSection: React.FC<{ data: MergedData[] }> = ({ data }) => {
+    const [expandedTrainer, setExpandedTrainer] = useState<string | null>(null);
+
+    const trainerData = useMemo(() => {
+      const trainers = new Map<string, { 
+        trainer: string;
+        employees: Set<string>;
+        totalCourses: number;
+        completedCourses: number;
+        stores: Set<string>;
+      }>();
+
+      data.forEach(item => {
+        const trainer = item.Trainer || 'Unknown';
+        if (trainer === 'TBD') return;
+        
+        if (!trainers.has(trainer)) {
+          trainers.set(trainer, {
+            trainer,
+            employees: new Set(),
+            totalCourses: 0,
+            completedCourses: 0,
+            stores: new Set()
+          });
+        }
+        
+        const trainerInfo = trainers.get(trainer)!;
+        trainerInfo.employees.add(item.employee_code);
+        trainerInfo.totalCourses++;
+        if (item.location) {
+          trainerInfo.stores.add(item.location);
+        }
+        if (item.course_completion_status === 'Completed') {
+          trainerInfo.completedCourses++;
+        }
+      });
+
+      return Array.from(trainers.values())
+        .map(trainer => ({
+          ...trainer,
+          employeeCount: trainer.employees.size,
+          completionRate: trainer.totalCourses > 0 
+            ? Math.round((trainer.completedCourses / trainer.totalCourses) * 100)
+            : 0,
+          storeCount: trainer.stores.size
+        }))
+        .sort((a, b) => b.completionRate - a.completionRate);
+    }, [data]);
+
+    const toggleTrainer = (trainerName: string) => {
+      setExpandedTrainer(expandedTrainer === trainerName ? null : trainerName);
+    };
+
+    return (
+      <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+              Trainer-wise Performance
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {trainerData.length} trainers • Click to expand details
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {trainerData.map((trainer, index) => (
+            <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleTrainer(trainer.trainer)}
+                className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+              >
+                <div className="flex items-center gap-4 flex-1">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${
+                    trainer.completionRate >= 80 ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
+                    trainer.completionRate >= 60 ? 'bg-gradient-to-br from-yellow-500 to-orange-600' :
+                    'bg-gradient-to-br from-red-500 to-pink-600'
+                  }`}>
+                    {trainer.trainer.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{trainer.trainer}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {trainer.employeeCount} employees • {trainer.storeCount} store{trainer.storeCount !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className={`px-4 py-2 text-lg font-bold rounded-full ${
+                      trainer.completionRate >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                      trainer.completionRate >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                      'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                    }`}>
+                      {trainer.completionRate}%
+                    </span>
+                    <svg 
+                      className={`w-5 h-5 text-gray-400 transition-transform ${expandedTrainer === trainer.trainer ? 'rotate-180' : ''}`}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </button>
+              
+              {expandedTrainer === trainer.trainer && (
+                <div className="p-4 bg-gray-50 dark:bg-slate-700/30 border-t border-gray-200 dark:border-gray-700">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{trainer.employeeCount}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Employees</div>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{trainer.totalCourses}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Total Courses</div>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">{trainer.completedCourses}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Completed</div>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{trainer.storeCount}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Stores</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -439,71 +755,104 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 px-1 sm:px-0">
         {/* Total Employees Card */}
         <div 
-          onClick={() => handleStatCardClick('total')}
-          className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-blue-200/50 dark:border-blue-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group active:scale-95 touch-manipulation"
+          className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-blue-200/50 dark:border-blue-800/50"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-md sm:rounded-lg lg:rounded-xl group-hover:from-blue-500/20 group-hover:to-indigo-500/20 transition-all duration-300">
+            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-md sm:rounded-lg lg:rounded-xl">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
             <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{totalEmployees}</p>
             <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 leading-tight">Total<br className="sm:hidden" /><span className="hidden sm:inline"> </span>Employees</p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 hidden sm:block">Tap for details</p>
           </div>
         </div>
 
         {/* High Performers Card */}
         <div 
-          onClick={() => handleStatCardClick('high')}
-          className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-green-200/50 dark:border-green-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group active:scale-95 touch-manipulation"
+          className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-green-200/50 dark:border-green-800/50"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-md sm:rounded-lg lg:rounded-xl group-hover:from-green-500/20 group-hover:to-emerald-500/20 transition-all duration-300">
+            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-md sm:rounded-lg lg:rounded-xl">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{highPerformers.length}</p>
             <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 text-center leading-tight">High<br className="sm:hidden" /><span className="hidden sm:inline"> </span>Performers<br className="hidden sm:block" /><span className="hidden sm:inline">(≥80%)</span></p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 hidden sm:block">Tap for details</p>
           </div>
         </div>
 
         {/* Average Performers Card */}
         <div 
-          onClick={() => handleStatCardClick('average')}
-          className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-yellow-200/50 dark:border-yellow-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group active:scale-95 touch-manipulation"
+          className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-yellow-200/50 dark:border-yellow-800/50"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-md sm:rounded-lg lg:rounded-xl group-hover:from-yellow-500/20 group-hover:to-orange-500/20 transition-all duration-300">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
+            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-md sm:rounded-lg lg:rounded-xl">
+              {(() => {
+                const avg = Number(getAverageCompletion(averagePerformers));
+                if (avg >= 80) {
+                  return (
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="9" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="9" cy="10" r="1" fill="currentColor" />
+                      <circle cx="15" cy="10" r="1" fill="currentColor" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 15c1.333 1 2.667 1 4 0" />
+                    </svg>
+                  );
+                }
+                if (avg >= 60) {
+                  return (
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="9" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="9" cy="10" r="1" fill="currentColor" />
+                      <circle cx="15" cy="10" r="1" fill="currentColor" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 15h8" />
+                    </svg>
+                  );
+                }
+                return (
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="9" cy="10" r="1" fill="currentColor" />
+                    <circle cx="15" cy="10" r="1" fill="currentColor" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 15c-1.333-1-2.667-1-4 0" />
+                  </svg>
+                );
+              })()}
             </div>
             <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{averagePerformers.length}</p>
             <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 text-center leading-tight">Average<br className="sm:hidden" /><span className="hidden sm:inline"> </span>Performers<br className="hidden sm:block" /><span className="hidden sm:inline">(60-79%)</span></p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 hidden sm:block">Tap for details</p>
           </div>
         </div>
 
         {/* Needs Attention Card */}
         <div 
-          onClick={() => handleStatCardClick('needs-attention')}
-          className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-red-200/50 dark:border-red-800/50 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl group active:scale-95 touch-manipulation"
+          className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border border-red-200/50 dark:border-red-800/50"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-red-500/10 to-pink-500/10 rounded-md sm:rounded-lg lg:rounded-xl group-hover:from-red-500/20 group-hover:to-pink-500/20 transition-all duration-300">
+            <div className="mb-2 sm:mb-3 lg:mb-4 p-1.5 sm:p-2 lg:p-3 bg-gradient-to-br from-red-500/10 to-pink-500/10 rounded-md sm:rounded-lg lg:rounded-xl">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
             <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{needsAttention.length}</p>
             <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 text-center leading-tight">Needs<br className="sm:hidden" /><span className="hidden sm:inline"> </span>Attention<br className="hidden sm:block" /><span className="hidden sm:inline">(&lt;60%)</span></p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 hidden sm:block">Tap for details</p>
           </div>
         </div>
+      </div>
+
+      {/* Download CSV Button */}
+      <div className="flex justify-center px-1 sm:px-0">
+        <button
+          onClick={downloadEmployeeCSV}
+          className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 touch-manipulation"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Download Employee Dashboard CSV</span>
+        </button>
       </div>
 
       {/* Tenure Analysis Charts - Mobile Enhanced */}
@@ -547,164 +896,11 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
         </div>
       )}
 
-      {/* Stat Card Detail Modal - Enhanced Mobile */}
-      {isStatModalOpen && selectedStatType && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-1 sm:p-2 lg:p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-2xl w-full max-w-6xl max-h-[98vh] sm:max-h-[95vh] lg:max-h-[90vh] overflow-y-auto">
-            {/* Modal Header - Enhanced Mobile */}
-            <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-3 sm:p-4 lg:p-6 rounded-t-lg sm:rounded-t-xl lg:rounded-t-2xl">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 pr-3 sm:pr-4">
-                  <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
-                    {selectedStatType === 'total' && 'All Employees'}
-                    {selectedStatType === 'high' && 'High Performers (≥80% Completion)'}
-                    {selectedStatType === 'average' && 'Average Performers (60-79% Completion)'}
-                    {selectedStatType === 'needs-attention' && 'Needs Attention (<60% Completion)'}
-                  </h2>
-                  <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 mt-1">
-                    {selectedStatType === 'total' && `${employeeCompletionRates.length} total employees`}
-                    {selectedStatType === 'high' && `${highPerformers.length} high performing employees`}
-                    {selectedStatType === 'average' && `${averagePerformers.length} average performing employees`}
-                    {selectedStatType === 'needs-attention' && `${needsAttention.length} employees requiring attention`}
-                  </p>
-                </div>
-                <button
-                  onClick={closeStatModal}
-                  className="p-2 sm:p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0 touch-manipulation"
-                >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+      {/* Store-wise Segregation Section */}
+      {isMerged && <StoreWiseSection data={filteredData as MergedData[]} />}
 
-            {/* Modal Content - Enhanced Mobile */}
-            <div className="p-3 sm:p-4 lg:p-6">
-              {/* Summary Cards - Mobile Responsive */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <div className={`p-3 sm:p-4 rounded-lg sm:rounded-xl ${
-                  selectedStatType === 'high' ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' :
-                  selectedStatType === 'average' ? 'bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20' :
-                  selectedStatType === 'needs-attention' ? 'bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20' :
-                  'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20'
-                }`}>
-                  <div className={`text-xl sm:text-2xl font-bold ${
-                    selectedStatType === 'high' ? 'text-green-600 dark:text-green-400' :
-                    selectedStatType === 'average' ? 'text-yellow-600 dark:text-yellow-400' :
-                    selectedStatType === 'needs-attention' ? 'text-red-600 dark:text-red-400' :
-                    'text-blue-600 dark:text-blue-400'
-                  }`}>
-                    {selectedStatType === 'total' && employeeCompletionRates.length}
-                    {selectedStatType === 'high' && highPerformers.length}
-                    {selectedStatType === 'average' && averagePerformers.length}
-                    {selectedStatType === 'needs-attention' && needsAttention.length}
-                  </div>
-                  <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Count</div>
-                </div>
-                
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-3 sm:p-4 rounded-lg sm:rounded-xl">
-                  <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {selectedStatType === 'total' && `${getAverageCompletion(employeeCompletionRates)}%`}
-                    {selectedStatType === 'high' && `${getAverageCompletion(highPerformers)}%`}
-                    {selectedStatType === 'average' && `${getAverageCompletion(averagePerformers)}%`}
-                    {selectedStatType === 'needs-attention' && `${getAverageCompletion(needsAttention)}%`}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Average Completion</div>
-                </div>
-
-                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 p-4 rounded-xl">
-                  <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                    {selectedStatType === 'total' && employeeCompletionRates.reduce((sum, emp) => sum + emp.total_courses, 0)}
-                    {selectedStatType === 'high' && highPerformers.reduce((sum, emp) => sum + emp.total_courses, 0)}
-                    {selectedStatType === 'average' && averagePerformers.reduce((sum, emp) => sum + emp.total_courses, 0)}
-                    {selectedStatType === 'needs-attention' && needsAttention.reduce((sum, emp) => sum + emp.total_courses, 0)}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Total Enrollments</div>
-                </div>
-              </div>
-
-              {/* Employee List */}
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {(selectedStatType === 'total' ? employeeCompletionRates :
-                  selectedStatType === 'high' ? highPerformers :
-                  selectedStatType === 'average' ? averagePerformers :
-                  needsAttention
-                ).map((employee, index) => (
-                  <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-lg transition-shadow">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 dark:text-white">{employee.employee_name}</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {employee.employee_code} • {employee.designation}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
-                          employee.completion_rate >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                          employee.completion_rate >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-                          'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                        }`}>
-                          {Math.round(employee.completion_rate)}%
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Total Courses:</span>
-                        <div className="text-gray-600 dark:text-gray-400">{employee.total_courses}</div>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Completed:</span>
-                        <div className="text-gray-600 dark:text-gray-400">{employee.completed_courses}</div>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Progress:</span>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full ${
-                                employee.completion_rate >= 80 ? 'bg-green-500' :
-                                employee.completion_rate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                              }`}
-                              style={{ width: `${employee.completion_rate}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Course List Preview */}
-                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                      <details className="group">
-                        <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                          View Courses ({employee.courses.length})
-                        </summary>
-                        <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
-                          {employee.courses.map((course, courseIndex) => (
-                            <div key={courseIndex} className="text-xs bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium">{course.course_name}</span>
-                                <span className={`px-2 py-1 rounded-full text-xs ${
-                                  course.completion_status === 'Completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                                  'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                                }`}>
-                                  {course.completion_status}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Trainer-wise Segregation Section */}
+      {isMerged && <TrainerWiseSection data={filteredData as MergedData[]} />}
     </div>
   );
 };

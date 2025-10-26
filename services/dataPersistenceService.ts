@@ -148,14 +148,47 @@ export class DataPersistenceService {
   static async autoLoadData(): Promise<{ data: any[] | null; source: 'googleSheets' | 'none'; fileName?: string }> {
     try {
       console.log('🔄 Loading data with fallback options...');
-      
+
+      // First, try to load local files served by the dev/build server (public/data)
+      // This makes it easy to run the app locally by dropping the JSON/CSV into public/data/
+      try {
+        // Try JSON first
+        const jsonResp = await fetch('/data/lms-completion.json', { cache: 'no-store' });
+        if (jsonResp.ok) {
+          const jsonData = await jsonResp.json();
+          if (Array.isArray(jsonData) && jsonData.length > 0) {
+            this.saveData(jsonData, 'Local JSON Data');
+            return { data: jsonData, source: 'googleSheets', fileName: 'Local JSON Data' };
+          }
+        }
+      } catch (e) {
+        // ignore and continue to CSV fallback
+      }
+
+      try {
+        // Try CSV fallback
+        const csvResp = await fetch('/data/lms-completion.csv', { cache: 'no-store' });
+        if (csvResp.ok) {
+          const csvText = await csvResp.text();
+          if (csvText && csvText.trim().length > 0) {
+            const parsed = this.parseCSV(csvText);
+            if (parsed && parsed.length > 0) {
+              this.saveData(parsed, 'Local CSV Data');
+              return { data: parsed, source: 'googleSheets', fileName: 'Local CSV Data' };
+            }
+          }
+        }
+      } catch (e) {
+        // ignore and fall through to other sources
+      }
+
       // First try the primary Google Sheets service
       try {
         const googleSheetsData = await fetchTrainingDataFromGoogleSheets();
-        
+
         if (googleSheetsData && googleSheetsData.length > 0) {
           this.saveData(googleSheetsData, 'Google Sheets Data');
-          
+
           return { 
             data: googleSheetsData, 
             source: 'googleSheets',
