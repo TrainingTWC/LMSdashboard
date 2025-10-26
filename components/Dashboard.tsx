@@ -163,31 +163,53 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
 
   // CSV Download function
   const downloadEmployeeCSV = useCallback(() => {
-    // Create CSV header
-    const headers = ['Employee Code', 'Employee Name', 'Designation', 'Total Courses', 'Completed Courses', 'Completion Rate (%)'];
+    // Create CSV with detailed course information
+    const rows: string[][] = [];
     
-    // Create CSV rows
-    const rows = employeeCompletionRates.map(emp => [
-      emp.employee_code,
-      emp.employee_name,
-      emp.designation,
-      emp.total_courses,
-      emp.completed_courses,
-      emp.completion_rate
-    ]);
+    // Add header
+    rows.push(['Employee Code', 'Employee Name', 'Designation', 'Course Name', 'Completion Status', 'Completion Date', 'Course End Date', 'Overall Completion Rate (%)']);
+    
+    // Create rows with each course as a separate line
+    employeeCompletionRates.forEach(emp => {
+      if (emp.courses && emp.courses.length > 0) {
+        emp.courses.forEach(course => {
+          rows.push([
+            emp.employee_code,
+            emp.employee_name,
+            emp.designation,
+            course.course_name,
+            course.completion_status,
+            course.completion_date || 'N/A',
+            course.course_end_date || 'N/A',
+            emp.completion_rate.toString()
+          ]);
+        });
+      } else {
+        // If no courses, still add employee row
+        rows.push([
+          emp.employee_code,
+          emp.employee_name,
+          emp.designation,
+          'No courses assigned',
+          'N/A',
+          'N/A',
+          'N/A',
+          emp.completion_rate.toString()
+        ]);
+      }
+    });
 
-    // Combine headers and rows
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => {
-        // Escape cells that contain commas or quotes
+    // Escape and format CSV content
+    const csvContent = rows.map(row => 
+      row.map(cell => {
         const cellStr = String(cell);
+        // Escape cells that contain commas, quotes, or newlines
         if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
           return `"${cellStr.replace(/"/g, '""')}"`;
         }
         return cellStr;
-      }).join(','))
-    ].join('\n');
+      }).join(',')
+    ).join('\n');
 
     // Create blob and download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -536,6 +558,32 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-6 px-1 sm:px-2 lg:px-0">
+      {/* Header with Updated Timestamp */}
+      <div className="flex items-center justify-between bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+        <div>
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
+            Dashboard Overview
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Training completion analytics and insights
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            Updated on:
+          </p>
+          <p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
+            {new Date().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </p>
+        </div>
+      </div>
+
       {/* Multi-Select Filter Bar - Enhanced Mobile with Collapse */}
       <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 overflow-visible relative shadow-sm" style={{ zIndex: 1 }}>
         {/* Filter Header - Mobile Friendly with Toggle */}

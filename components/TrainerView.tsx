@@ -290,35 +290,51 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-indigo-200/50 dark:border-indigo-800/50">
-          <div className="flex items-center gap-3 sm:gap-4 mb-4">
-            <div className="p-2 sm:p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
-              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
+          <div className="flex items-center justify-between gap-3 sm:gap-4 mb-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="p-2 sm:p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                  {roleName} Dashboard
+                </h1>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                  {trainerDisplayName ? (
+                    <>
+                      <span className="font-bold text-lg text-gray-900 dark:text-white">{trainerDisplayName}</span>
+                      <span className="ml-2 text-xs font-mono font-semibold text-gray-600 dark:text-gray-300">({normalizedTrainerCodeUpper})</span>
+                    </>
+                  ) : (
+                    <>ID: <span className="font-mono font-semibold">{trainerCode}</span></>
+                  )}
+                  {!hasFullAccess && (
+                    <span className="ml-2 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full">
+                      {trainerInfo.stores.length} Store{trainerInfo.stores.length !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  {hasFullAccess && (
+                    <span className="ml-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
+                      Full Access
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-                {roleName} Dashboard
-              </h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                {trainerDisplayName ? (
-                  <>
-                    <span className="font-bold text-lg text-gray-900 dark:text-white">{trainerDisplayName}</span>
-                    <span className="ml-2 text-xs font-mono font-semibold text-gray-600 dark:text-gray-300">({normalizedTrainerCodeUpper})</span>
-                  </>
-                ) : (
-                  <>ID: <span className="font-mono font-semibold">{trainerCode}</span></>
-                )}
-                {!hasFullAccess && (
-                  <span className="ml-2 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full">
-                    {trainerInfo.stores.length} Store{trainerInfo.stores.length !== 1 ? 's' : ''}
-                  </span>
-                )}
-                {hasFullAccess && (
-                  <span className="ml-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                    Full Access
-                  </span>
-                )}
+            <div className="text-right hidden sm:block">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Updated on:
+              </p>
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                {new Date().toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'short', 
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
               </p>
             </div>
           </div>

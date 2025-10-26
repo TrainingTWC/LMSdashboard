@@ -334,6 +334,32 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-6 px-1 sm:px-2 lg:px-0">
+      {/* Header with Updated Timestamp */}
+      <div className="flex items-center justify-between bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+        <div>
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
+            Employee Dashboard
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Individual employee training progress and details
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            Updated on:
+          </p>
+          <p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
+            {new Date().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </p>
+        </div>
+      </div>
+
       {/* Multi-Select Filters - Collapsible */}
       <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 overflow-visible relative shadow-sm" style={{ zIndex: 10 }}>
         {/* Filter Header - Mobile Friendly with Toggle */}
