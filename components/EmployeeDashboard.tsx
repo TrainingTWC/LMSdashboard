@@ -215,8 +215,22 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
 
   // Get course status with overdue info
   const getCourseStatus = (course: any) => {
-    if (course.completion_status === 'Completed') {
+    if (course.course_completion_status === 'Completed') {
       return { status: 'Completed', color: 'green', isOverdue: false };
+    }
+    
+    // Check progress to determine if "Not Started" or "In Progress"
+    let progress = 0;
+    if (course.course_progress != null) {
+      const progressValue = typeof course.course_progress === 'number' 
+        ? course.course_progress 
+        : parseFloat(String(course.course_progress));
+      progress = !isNaN(progressValue) ? progressValue : 0;
+    }
+    
+    // If progress is 0%, show "Not Started"
+    if (progress === 0) {
+      return { status: 'Not Started', color: 'red', isOverdue: false };
     }
     
     const isOverdue = isCourseOverdue(course);
@@ -241,11 +255,9 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
         const progressValue = typeof record.course_progress === 'number' 
           ? record.course_progress 
           : parseFloat(String(record.course_progress));
-        calculatedProgress = !isNaN(progressValue) ? progressValue : 50;
-      } else {
-        // If no progress data and not completed, assume in progress
-        calculatedProgress = 50;
+        calculatedProgress = !isNaN(progressValue) ? progressValue : 0;
       }
+      // If no progress data and not completed, leave at 0
 
       return {
         course_name: record.course_name,

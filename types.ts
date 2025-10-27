@@ -29,6 +29,7 @@ export interface StoreRecord {
     Region: string;
     AM: string;
     Trainer: string;
+    'Regional Training Manager'?: string;
     'E-Learning Specialist'?: string;
     'Training Head'?: string;
     'HR Head'?: string;
