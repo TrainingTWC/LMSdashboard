@@ -35,6 +35,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>('Local CSV Data');
+  const [lastModified, setLastModified] = useState<Date | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
   const [dataSource, setDataSource] = useState<'googleSheets' | 'none'>('none');
@@ -239,18 +240,21 @@ const App: React.FC = () => {
         setIsMerged(true);
         setDataSource(result.source);
         setFileName(result.fileName || 'GitHub Repository CSV Data');
+        setLastModified(result.lastModified || null);
         setError(null);
       } else {
         // No data available
         setData(null);
         setDataSource('none');
         setFileName('No Data');
+        setLastModified(null);
       }
     } catch (error) {
       console.error('Failed to auto-load data:', error);
       setError('Failed to load training data. Please upload a CSV file.');
       setData(null);
       setDataSource('none');
+      setLastModified(null);
     } finally {
       setIsLoading(false);
     }
@@ -513,7 +517,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="p-4">
-                    <TabbedDashboard data={getManagerScopedData(userId, data)} fileName={`${fileName} (Manager Scope)`} isMerged={isMerged} trainerNames={trainerNames} />
+                    <TabbedDashboard data={getManagerScopedData(userId, data)} fileName={`${fileName} (Manager Scope)`} isMerged={isMerged} trainerNames={trainerNames} lastModified={lastModified} />
                   </div>
                 </div>
               </div>
@@ -527,7 +531,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="p-4">
-                    <TabbedDashboard data={getTrainerScopedData(userId, data)} fileName={`${fileName} (Trainer Scope)`} isMerged={isMerged} trainerNames={trainerNames} />
+                    <TabbedDashboard data={getTrainerScopedData(userId, data)} fileName={`${fileName} (Trainer Scope)`} isMerged={isMerged} trainerNames={trainerNames} lastModified={lastModified} />
                   </div>
                 </div>
               </div>
@@ -598,7 +602,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} trainerNames={trainerNames} />
+                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} trainerNames={trainerNames} lastModified={lastModified} />
                 )
               )}
             </>

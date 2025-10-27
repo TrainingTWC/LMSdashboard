@@ -18,9 +18,10 @@ interface DashboardProps {
   fileName: string;
   isMerged: boolean;
   trainerNames?: Record<string, string>;
+  lastModified?: Date | null;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainerNames = {} }) => {
+const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainerNames = {}, lastModified = null }) => {
   // Create reverse mapping from name to ID for filtering
   const trainerIdsByName = useMemo(() => {
     const reverseMap: Record<string, string> = {};
@@ -587,13 +588,23 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainer
             Updated on:
           </p>
           <p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
-            {new Date().toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'short', 
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
+            {lastModified ? (
+              lastModified.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            ) : (
+              new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            )}
           </p>
         </div>
       </div>

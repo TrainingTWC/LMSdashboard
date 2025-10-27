@@ -145,7 +145,7 @@ export class DataPersistenceService {
    * Auto-load data with multiple fallback options
    * Tries Google Sheets first, then alternative sources
    */
-  static async autoLoadData(): Promise<{ data: any[] | null; source: 'googleSheets' | 'none'; fileName?: string }> {
+  static async autoLoadData(): Promise<{ data: any[] | null; source: 'googleSheets' | 'none'; fileName?: string; lastModified?: Date }> {
     try {
       console.log('🔄 Loading data with fallback options...');
 
@@ -157,8 +157,23 @@ export class DataPersistenceService {
         if (jsonResp.ok) {
           const jsonData = await jsonResp.json();
           if (Array.isArray(jsonData) && jsonData.length > 0) {
+            // Try to get the last modified date from GitHub
+            let lastModified: Date | null = null;
+            try {
+              if (githubUploadService.isConfigured()) {
+                lastModified = await githubUploadService.getFileLastModified('public/data/lms-completion.json');
+              }
+            } catch (e) {
+              console.warn('Could not fetch last modified date from GitHub:', e);
+            }
+            
             this.saveData(jsonData, 'Local JSON Data');
-            return { data: jsonData, source: 'googleSheets', fileName: 'Local JSON Data' };
+            return { 
+              data: jsonData, 
+              source: 'googleSheets', 
+              fileName: 'Local JSON Data',
+              lastModified: lastModified || undefined
+            };
           }
         }
       } catch (e) {
@@ -173,8 +188,23 @@ export class DataPersistenceService {
           if (csvText && csvText.trim().length > 0) {
             const parsed = this.parseCSV(csvText);
             if (parsed && parsed.length > 0) {
+              // Try to get the last modified date from GitHub
+              let lastModified: Date | null = null;
+              try {
+                if (githubUploadService.isConfigured()) {
+                  lastModified = await githubUploadService.getFileLastModified('public/data/lms-completion.csv');
+                }
+              } catch (e) {
+                console.warn('Could not fetch last modified date from GitHub:', e);
+              }
+              
               this.saveData(parsed, 'Local CSV Data');
-              return { data: parsed, source: 'googleSheets', fileName: 'Local CSV Data' };
+              return { 
+                data: parsed, 
+                source: 'googleSheets', 
+                fileName: 'Local CSV Data',
+                lastModified: lastModified || undefined
+              };
             }
           }
         }

@@ -204,6 +204,35 @@ export class GitHubUploadService {
       return [];
     }
   }
+
+  /**
+   * Get the last commit date for a specific file
+   */
+  async getFileLastModified(path: string): Promise<Date | null> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/repos/${this.owner}/${this.repo}/commits?path=${path}&page=1&per_page=1`,
+        {
+          headers: {
+            'Authorization': `token ${this.token}`,
+            'Accept': 'application/vnd.github.v3+json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const commits = await response.json();
+        if (commits && commits.length > 0) {
+          const lastCommitDate = commits[0].commit.committer.date;
+          return new Date(lastCommitDate);
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting file last modified date:', error);
+      return null;
+    }
+  }
 }
 
 // Export singleton instance
