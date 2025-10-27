@@ -210,14 +210,18 @@ export class GitHubUploadService {
    */
   async getFileLastModified(path: string): Promise<Date | null> {
     try {
+      const headers: HeadersInit = {
+        'Accept': 'application/vnd.github.v3+json',
+      };
+      
+      // Add token if available (optional for public repos)
+      if (this.token) {
+        headers['Authorization'] = `token ${this.token}`;
+      }
+      
       const response = await fetch(
         `${this.baseUrl}/repos/${this.owner}/${this.repo}/commits?path=${path}&page=1&per_page=1`,
-        {
-          headers: {
-            'Authorization': `token ${this.token}`,
-            'Accept': 'application/vnd.github.v3+json',
-          },
-        }
+        { headers }
       );
 
       if (response.ok) {

@@ -157,12 +157,11 @@ export class DataPersistenceService {
         if (jsonResp.ok) {
           const jsonData = await jsonResp.json();
           if (Array.isArray(jsonData) && jsonData.length > 0) {
-            // Try to get the last modified date from GitHub
+            // Try to get the last modified date from GitHub (works for public repos)
             let lastModified: Date | null = null;
             try {
-              if (githubUploadService.isConfigured()) {
-                lastModified = await githubUploadService.getFileLastModified('public/data/lms-completion.json');
-              }
+              lastModified = await githubUploadService.getFileLastModified('public/data/lms-completion.json');
+              console.log('GitHub last modified date:', lastModified);
             } catch (e) {
               console.warn('Could not fetch last modified date from GitHub:', e);
             }
@@ -188,12 +187,11 @@ export class DataPersistenceService {
           if (csvText && csvText.trim().length > 0) {
             const parsed = this.parseCSV(csvText);
             if (parsed && parsed.length > 0) {
-              // Try to get the last modified date from GitHub
+              // Try to get the last modified date from GitHub (works for public repos)
               let lastModified: Date | null = null;
               try {
-                if (githubUploadService.isConfigured()) {
-                  lastModified = await githubUploadService.getFileLastModified('public/data/lms-completion.csv');
-                }
+                lastModified = await githubUploadService.getFileLastModified('public/data/lms-completion.csv');
+                console.log('GitHub last modified date:', lastModified);
               } catch (e) {
                 console.warn('Could not fetch last modified date from GitHub:', e);
               }
