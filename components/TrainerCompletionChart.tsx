@@ -23,7 +23,10 @@ const TrainerCompletionChart: React.FC<ChartProps> = ({ data, trainerNames = {} 
 
   const chartData = Object.keys(trainerData).map(trainerId => ({
     name: trainerNames[trainerId] || trainerId,
+    trainerId: trainerId,
     'Completion Rate': (trainerData[trainerId].completed / trainerData[trainerId].total) * 100,
+    total: trainerData[trainerId].total,
+    completed: trainerData[trainerId].completed
   })).sort((a, b) => b['Completion Rate'] - a['Completion Rate']); // Sort from high to low
 
   return (
