@@ -57,9 +57,27 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
   // Get trainer info and their stores
   const trainerInfo = useMemo(() => {
     const normalizedTrainerCode = trainerCode.toLowerCase();
+    
+    // Check if this is a Regional Training Manager
+    const regionalManagers: Record<string, string> = {
+      'h1697': 'South',
+      'h2595': 'North',
+      'h3252': 'West'
+    };
+    
+    const region = regionalManagers[normalizedTrainerCode];
+    
+    if (region) {
+      // Regional Training Manager - get all stores in their region
+      const stores = storeMappingData.filter(store => store.Region === region);
+      const storeIds = stores.map(s => s['Store ID']);
+      return { stores, storeIds, region, isRegionalManager: true };
+    }
+    
+    // Regular trainer - only their assigned stores
     const stores = storeMappingData.filter(store => store.Trainer.toLowerCase() === normalizedTrainerCode);
     const storeIds = stores.map(s => s['Store ID']);
-    return { stores, storeIds };
+    return { stores, storeIds, region: null, isRegionalManager: false };
   }, [trainerCode]);
 
   // Check if this is E-Learning Specialist, Training Head, or HR Head (access to all data)
@@ -73,11 +91,18 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
 
   // Get role name
   const roleName = useMemo(() => {
+    const normalizedTrainerCode = trainerCode.toLowerCase();
+    
+    // Check if Regional Training Manager
+    if (trainerInfo.isRegionalManager) {
+      return 'Regional Training Manager';
+    }
+    
     if (storeMappingData.find(s => s['Training Head'] === trainerCode)) return 'Training Head';
     if (storeMappingData.find(s => s['HR Head'] === trainerCode)) return 'HR Head';
     if (storeMappingData.find(s => s['E-Learning Specialist'] === trainerCode)) return 'E-Learning Specialist';
     return 'Trainer';
-  }, [trainerCode]);
+  }, [trainerCode, trainerInfo.isRegionalManager]);
 
   // Filter data by trainer's stores or show all if full access
   const filteredData = useMemo(() => {
@@ -310,7 +335,12 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                   ) : (
                     <>ID: <span className="font-mono font-semibold">{trainerCode}</span></>
                   )}
-                  {!hasFullAccess && (
+                  {trainerInfo.isRegionalManager && trainerInfo.region && (
+                    <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full font-semibold">
+                      {trainerInfo.region} Region • {trainerInfo.stores.length} Store{trainerInfo.stores.length !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  {!hasFullAccess && !trainerInfo.isRegionalManager && (
                     <span className="ml-2 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full">
                       {trainerInfo.stores.length} Store{trainerInfo.stores.length !== 1 ? 's' : ''}
                     </span>

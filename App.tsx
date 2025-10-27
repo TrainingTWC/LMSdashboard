@@ -169,7 +169,32 @@ const App: React.FC = () => {
   const getTrainerScopedData = (trainerId: string, allData: (EmployeeTrainingRecord | MergedData)[]) => {
     if (!trainerId || !allData || allData.length === 0) return [];
     const normalizedTrainer = trainerId.toLowerCase();
-    // Find Store IDs for this trainer from storeMappingData
+    
+    // Check if this trainer is a Regional Training Manager
+    // H1697 (Sheldon) - South, H2595 (Kailash) - North, H3252 (Priyanka) - West
+    const regionalManagers = {
+      'h1697': 'South',
+      'h2595': 'North', 
+      'h3252': 'West'
+    };
+    
+    const region = regionalManagers[normalizedTrainer];
+    
+    if (region) {
+      // Regional Training Manager - give access to entire region
+      const regionalStoreIds = new Set(
+        storeMappingData
+          .filter(s => s.Region === region)
+          .map(s => s['Store ID'])
+      );
+      
+      return allData.filter(r => {
+        const storeId = (r as any)['Store ID'];
+        return storeId && regionalStoreIds.has(storeId);
+      });
+    }
+    
+    // Regular trainer - access only to their assigned stores
     const stores = storeMappingData.filter(s => (
       (s.Trainer || '').toLowerCase() === normalizedTrainer ||
       (s['E-Learning Specialist'] || '').toLowerCase() === normalizedTrainer ||
