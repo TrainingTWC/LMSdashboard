@@ -7,9 +7,19 @@ interface EmployeeDashboardProps {
   data: (EmployeeTrainingRecord | MergedData)[];
   fileName: string;
   isMerged: boolean;
+  trainerNames?: Record<string, string>;
 }
 
-const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, isMerged }) => {
+const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, isMerged, trainerNames = {} }) => {
+  // Create reverse mapping from name to ID for filtering
+  const trainerIdsByName = useMemo(() => {
+    const reverseMap: Record<string, string> = {};
+    Object.entries(trainerNames).forEach(([id, name]) => {
+      reverseMap[name] = id;
+    });
+    return reverseMap;
+  }, [trainerNames]);
+
   // Multi-select filter states
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [selectedAreaManagers, setSelectedAreaManagers] = useState<string[]>([]);
@@ -68,8 +78,10 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
   const uniqueTrainers = useMemo(() => {
     if (!isMerged) return [];
     const trainers = [...new Set(storeMappingData.map(store => store.Trainer).filter(trainer => trainer !== 'TBD'))].sort();
-    return trainers.filter(trainer => trainer.toLowerCase().includes(trainerSearch.toLowerCase()));
-  }, [isMerged, trainerSearch]);
+    // Map trainer IDs to names for display
+    const trainerNamesArray = trainers.map(trainerId => trainerNames[trainerId] || trainerId);
+    return trainerNamesArray.filter(trainer => trainer.toLowerCase().includes(trainerSearch.toLowerCase()));
+  }, [isMerged, trainerSearch, trainerNames]);
 
   const uniqueDesignations = useMemo(() => {
     const designations = [...new Set(data.map(item => item.designation || 'Unknown').filter(Boolean))].sort();
@@ -139,7 +151,9 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
 
     // Filter by trainers
     if (selectedTrainers.length > 0 && isMerged) {
-      filtered = filtered.filter(emp => selectedTrainers.includes(emp.trainer));
+      // Convert selected trainer names to IDs for comparison
+      const selectedTrainerIds = selectedTrainers.map(name => trainerIdsByName[name] || name);
+      filtered = filtered.filter(emp => selectedTrainerIds.includes(emp.trainer));
     }
 
     // Filter by designations
@@ -744,7 +758,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
                     </span>
                   </td>
                   {isMerged && <td className="py-3 px-2 text-gray-900 dark:text-white">{employee.location}</td>}
-                  {isMerged && <td className="py-3 px-2 text-gray-900 dark:text-white">{employee.trainer}</td>}
+                  {isMerged && <td className="py-3 px-2 text-gray-900 dark:text-white">{trainerNames[employee.trainer] || employee.trainer}</td>}
                   <td className="py-3 px-2 text-center">
                     <div className="text-gray-900 dark:text-white">{employee.completedCourses}/{employee.totalCourses}</div>
                   </td>
@@ -913,7 +927,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
                           </div>
                           <div>
                             <span className="font-medium text-gray-700 dark:text-gray-300">Trainer:</span>
-                            <div className="text-gray-600 dark:text-gray-400">{employee.trainer}</div>
+                            <div className="text-gray-600 dark:text-gray-400">{trainerNames[employee.trainer] || employee.trainer}</div>
                           </div>
                         </div>
                       </div>
@@ -1018,7 +1032,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
                     <div className="space-y-2 text-sm">
                       <div><span className="font-medium">Store Location:</span> {selectedEmployeeDetail.location}</div>
                       <div><span className="font-medium">Area Manager:</span> {selectedEmployeeDetail.areaManager}</div>
-                      <div><span className="font-medium">Trainer:</span> {selectedEmployeeDetail.trainer}</div>
+                      <div><span className="font-medium">Trainer:</span> {trainerNames[selectedEmployeeDetail.trainer] || selectedEmployeeDetail.trainer}</div>
                     </div>
                   </div>
                 )}

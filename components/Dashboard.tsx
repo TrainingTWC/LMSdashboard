@@ -17,9 +17,19 @@ interface DashboardProps {
   data: (EmployeeTrainingRecord | MergedData)[];
   fileName: string;
   isMerged: boolean;
+  trainerNames?: Record<string, string>;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
+const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainerNames = {} }) => {
+  // Create reverse mapping from name to ID for filtering
+  const trainerIdsByName = useMemo(() => {
+    const reverseMap: Record<string, string> = {};
+    Object.entries(trainerNames).forEach(([id, name]) => {
+      reverseMap[name] = id;
+    });
+    return reverseMap;
+  }, [trainerNames]);
+
   // Multi-select filter states
   const [selectedTenure, setSelectedTenure] = useState<string[]>([]);
   const [selectedStore, setSelectedStore] = useState<string[]>([]);
@@ -63,8 +73,10 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
 
   const uniqueTrainers = useMemo(() => {
     const trainers = [...new Set(storeMappingData.map(store => store.Trainer).filter(trainer => trainer !== 'TBD'))].sort();
-    return trainers.filter(trainer => trainer.toLowerCase().includes(trainerSearch.toLowerCase()));
-  }, [trainerSearch]);
+    // Map trainer IDs to names for display
+    const trainerNamesArray = trainers.map(trainerId => trainerNames[trainerId] || trainerId);
+    return trainerNamesArray.filter(trainer => trainer.toLowerCase().includes(trainerSearch.toLowerCase()));
+  }, [trainerSearch, trainerNames]);
 
   const uniqueCourses = useMemo(() => {
     const courses = [...new Set(data.map(item => item.course_name || 'Unknown').filter(Boolean))].sort();
@@ -100,7 +112,9 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
       // Trainer filter
       if (selectedTrainer.length > 0) {
         const trainer = isMerged ? (item as MergedData).Trainer : 'Unknown';
-        if (!selectedTrainer.includes(trainer)) return false;
+        // Convert selected trainer names to IDs for comparison
+        const selectedTrainerIds = selectedTrainer.map(name => trainerIdsByName[name] || name);
+        if (!selectedTrainerIds.includes(trainer)) return false;
       }
       
       // Course filter
@@ -499,10 +513,10 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
                     trainer.completionRate >= 60 ? 'bg-gradient-to-br from-yellow-500 to-orange-600' :
                     'bg-gradient-to-br from-red-500 to-pink-600'
                   }`}>
-                    {trainer.trainer.charAt(0).toUpperCase()}
+                    {(trainerNames[trainer.trainer] || trainer.trainer).charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-gray-900 dark:text-white">{trainer.trainer}</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{trainerNames[trainer.trainer] || trainer.trainer}</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {trainer.employeeCount} employees • {trainer.storeCount} store{trainer.storeCount !== 1 ? 's' : ''}
                     </p>
@@ -920,7 +934,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged }) => {
             <RegionCompletionChart data={filteredData as MergedData[]} />
           </div>
           <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-            <TrainerCompletionChart data={filteredData as MergedData[]} />
+            <TrainerCompletionChart data={filteredData as MergedData[]} trainerNames={trainerNames} />
           </div>
           <div className="lg:col-span-2 xl:col-span-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
             <AreaManagerCompletionChart data={filteredData as MergedData[]} />

@@ -488,7 +488,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="p-4">
-                    <TabbedDashboard data={getManagerScopedData(userId, data)} fileName={`${fileName} (Manager Scope)`} isMerged={isMerged} />
+                    <TabbedDashboard data={getManagerScopedData(userId, data)} fileName={`${fileName} (Manager Scope)`} isMerged={isMerged} trainerNames={trainerNames} />
                   </div>
                 </div>
               </div>
@@ -502,7 +502,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="p-4">
-                    <TabbedDashboard data={getTrainerScopedData(userId, data)} fileName={`${fileName} (Trainer Scope)`} isMerged={isMerged} />
+                    <TabbedDashboard data={getTrainerScopedData(userId, data)} fileName={`${fileName} (Trainer Scope)`} isMerged={isMerged} trainerNames={trainerNames} />
                   </div>
                 </div>
               </div>
@@ -573,7 +573,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} />
+                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} trainerNames={trainerNames} />
                 )
               )}
             </>

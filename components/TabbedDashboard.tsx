@@ -7,11 +7,12 @@ interface TabbedDashboardProps {
   data: (EmployeeTrainingRecord | MergedData)[];
   fileName: string;
   isMerged: boolean;
+  trainerNames?: Record<string, string>;
 }
 
 type TabType = 'overview' | 'employee';
 
-const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ data, fileName, isMerged }) => {
+const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ data, fileName, isMerged, trainerNames = {} }) => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   const tabs = [
@@ -75,13 +76,13 @@ const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ data, fileName, isMer
         <div className="transition-all duration-300 ease-in-out">
           {activeTab === 'overview' && (
             <div className="animate-in fade-in duration-400">
-              <Dashboard data={data} fileName={fileName} isMerged={isMerged} />
+              <Dashboard data={data} fileName={fileName} isMerged={isMerged} trainerNames={trainerNames} />
             </div>
           )}
           
           {activeTab === 'employee' && (
             <div className="animate-in fade-in duration-400">
-              <EmployeeDashboard data={data} fileName={fileName} isMerged={isMerged} />
+              <EmployeeDashboard data={data} fileName={fileName} isMerged={isMerged} trainerNames={trainerNames} />
             </div>
           )}
         </div>
