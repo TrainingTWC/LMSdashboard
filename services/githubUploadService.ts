@@ -219,11 +219,10 @@ export class GitHubUploadService {
         headers['Authorization'] = `token ${this.token}`;
       }
       
-      const response = await fetch(
-        `${this.baseUrl}/repos/${this.owner}/${this.repo}/commits?path=${path}&page=1&per_page=1`,
-        { headers }
-      );
-
+      const url = `${this.baseUrl}/repos/${this.owner}/${this.repo}/commits?path=${path}&page=1&per_page=1`;
+      
+      const response = await fetch(url, { headers });
+      
       if (response.ok) {
         const commits = await response.json();
         if (commits && commits.length > 0) {

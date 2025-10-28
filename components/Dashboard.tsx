@@ -147,6 +147,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainer
           employee_code: empCode,
           employee_name: item.employee_name,
           designation: item.designation,
+          location: (item as MergedData).location || 'N/A',
           total_courses: 0,
           completed_courses: 0,
           completion_rate: 0,
@@ -182,7 +183,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainer
     const rows: string[][] = [];
     
     // Add header
-    rows.push(['Employee Code', 'Employee Name', 'Designation', 'Course Name', 'Completion Status', 'Completion Date', 'Course End Date', 'Overall Completion Rate (%)']);
+    rows.push(['Employee Code', 'Employee Name', 'Designation', 'Store', 'Course Name', 'Completion Status', 'Completion Date', 'Course End Date', 'Overall Completion Rate (%)']);
     
     // Create rows with each course as a separate line
     employeeCompletionRates.forEach(emp => {
@@ -192,6 +193,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainer
             emp.employee_code,
             emp.employee_name,
             emp.designation,
+            emp.location || 'N/A',
             course.course_name,
             course.completion_status,
             course.completion_date || 'N/A',
@@ -205,6 +207,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainer
           emp.employee_code,
           emp.employee_name,
           emp.designation,
+          emp.location || 'N/A',
           'No courses assigned',
           'N/A',
           'N/A',

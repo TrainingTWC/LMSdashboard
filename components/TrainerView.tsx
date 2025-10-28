@@ -7,17 +7,31 @@ interface TrainerViewProps {
   data: (EmployeeTrainingRecord | MergedData)[];
   trainerCode: string;
   trainerNames?: Record<string, string>;
+  lastModified?: Date | null;
 }
 
 const ITEMS_PER_PAGE = 20; // Show 20 employees at a time
 
-const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNames = {} }) => {
+const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNames = {}, lastModified = null }) => {
   const parsePercent = (v: any) => {
     if (v === null || v === undefined) return 0;
     const raw = typeof v === 'string' ? v.replace(/%/g, '') : String(v);
     const n = parseFloat(raw);
     return isNaN(n) ? 0 : Math.round(n);
   };
+  
+  // Tenure calculation function
+  const calculateTenure = (dateOfJoining: string): string => {
+    const joinDate = new Date(dateOfJoining);
+    const currentDate = new Date();
+    const daysDiff = Math.floor((currentDate.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff <= 4) return '1-4 days';
+    if (daysDiff <= 15) return '5-15 days';
+    if (daysDiff <= 30) return '16-30 days';
+    return 'over a month';
+  };
+  
   // Normalize trainerCode and lookup display name case-insensitively
   const normalizedTrainerCodeUpper = trainerCode ? trainerCode.toUpperCase() : trainerCode;
   const normalizedTrainerCodeLower = trainerCode ? trainerCode.toLowerCase() : trainerCode;
@@ -122,10 +136,12 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
       employee_code: string;
       employee_name: string;
       employee_email: string;
+      reporting_manager_name: string;
       designation: string;
       department: string;
       location: string;
       store_id: string;
+      date_of_joining: string;
       total_courses: number;
       completed_courses: number;
       in_progress: number;
@@ -149,10 +165,12 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
           employee_code: empCode,
           employee_name: item.employee_name,
           employee_email: (item as any).employee_email || '',
+          reporting_manager_name: item.reporting_manager_name || 'N/A',
           designation: item.designation,
           department: item.department || 'N/A',
           location: (item as MergedData).location || 'N/A',
           store_id: (item as MergedData)['Store ID'] || 'N/A',
+          date_of_joining: item.date_of_joining || '',
           total_courses: 0,
           completed_courses: 0,
           in_progress: 0,
@@ -326,45 +344,58 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                   {roleName} Dashboard
                 </h1>
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                  {trainerDisplayName ? (
-                    <>
-                      <span className="font-bold text-lg text-gray-900 dark:text-white">{trainerDisplayName}</span>
-                      <span className="ml-2 text-xs font-mono font-semibold text-gray-600 dark:text-gray-300">({normalizedTrainerCodeUpper})</span>
-                    </>
-                  ) : (
-                    <>ID: <span className="font-mono font-semibold">{trainerCode}</span></>
-                  )}
-                  {trainerInfo.isRegionalManager && trainerInfo.region && (
-                    <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full font-semibold">
-                      {trainerInfo.region} Region • {trainerInfo.stores.length} Store{trainerInfo.stores.length !== 1 ? 's' : ''}
-                    </span>
-                  )}
-                  {!hasFullAccess && !trainerInfo.isRegionalManager && (
-                    <span className="ml-2 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full">
-                      {trainerInfo.stores.length} Store{trainerInfo.stores.length !== 1 ? 's' : ''}
-                    </span>
-                  )}
-                  {hasFullAccess && (
-                    <span className="ml-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                      Full Access
-                    </span>
-                  )}
-                </p>
+                <div className="mt-1">
+                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                    {trainerDisplayName ? (
+                      <>
+                        <span className="font-bold text-lg text-gray-900 dark:text-white">{trainerDisplayName}</span>
+                        <span className="ml-2 text-xs font-mono font-semibold text-gray-600 dark:text-gray-300">({normalizedTrainerCodeUpper})</span>
+                      </>
+                    ) : (
+                      <>ID: <span className="font-mono font-semibold">{trainerCode}</span></>
+                    )}
+                  </p>
+                  <div className="mt-1">
+                    {trainerInfo.isRegionalManager && trainerInfo.region && (
+                      <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full font-semibold">
+                        {trainerInfo.region} Region • {trainerInfo.stores.length} Store{trainerInfo.stores.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {!hasFullAccess && !trainerInfo.isRegionalManager && (
+                      <span className="text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full">
+                        {trainerInfo.stores.length} Store{trainerInfo.stores.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {hasFullAccess && (
+                      <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
+                        Full Access
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="text-right hidden sm:block">
+            <div className="text-right">
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Updated on:
               </p>
               <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                {new Date().toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'short', 
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {lastModified 
+                  ? lastModified.toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })
+                  : new Date().toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })
+                }
               </p>
             </div>
           </div>
@@ -509,6 +540,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
               data={filteredData as any}
               fileName={`Overall - ${trainerCode}`}
               isMerged={Boolean((filteredData as any)[0] && (filteredData as any)[0]['Store ID'])}
+              lastModified={lastModified}
             />
           )}
 
@@ -673,7 +705,9 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                             {Math.round(employee.completion_rate)}%
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{employee.designation}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {employee.designation} • Tenure: {calculateTenure(employee.date_of_joining)}
+                        </p>
                       </div>
                     </div>
                     
@@ -692,9 +726,9 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                       </div>
                       <div className="flex items-center gap-1">
                         <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        <span className="truncate">{employee.employee_email}</span>
+                        <span className="truncate">Manager: {employee.reporting_manager_name}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -990,7 +1024,9 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
                           </div>
                           <div className="flex-1">
                             <h4 className="text-lg font-bold text-gray-900 dark:text-white">{employee.employee_name}</h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{employee.designation} • {employee.location}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {employee.designation} • {employee.location} • Tenure: {calculateTenure(employee.date_of_joining)}
+                            </p>
                           </div>
                         </div>
                         <span className={`px-3 py-1 text-sm font-medium rounded-full ${

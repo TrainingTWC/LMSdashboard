@@ -574,7 +574,7 @@ const App: React.FC = () => {
                 ) : userRole === 'manager' && userId ? (
                   <ManagerView data={data} managerCode={userId} isMerged={isMerged} />
                 ) : userRole === 'trainer' && userId ? (
-                  <TrainerView data={data} trainerCode={userId} trainerNames={trainerNames} />
+                  <TrainerView data={data} trainerCode={userId} trainerNames={trainerNames} lastModified={lastModified} />
                 ) : userRole === 'not-found' && userId ? (
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-600 rounded-2xl p-8 shadow-2xl text-center max-w-2xl mx-auto">
                     <div className="flex flex-col items-center">

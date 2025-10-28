@@ -147,8 +147,6 @@ export class DataPersistenceService {
    */
   static async autoLoadData(): Promise<{ data: any[] | null; source: 'googleSheets' | 'none'; fileName?: string; lastModified?: Date }> {
     try {
-      console.log('🔄 Loading data with fallback options...');
-
       // First, try to load local files served by the dev/build server (public/data)
       // This makes it easy to run the app locally by dropping the JSON/CSV into public/data/
       try {
@@ -160,10 +158,12 @@ export class DataPersistenceService {
             // Try to get the last modified date from GitHub (works for public repos)
             let lastModified: Date | null = null;
             try {
-              lastModified = await githubUploadService.getFileLastModified('public/data/lms-completion.json');
-              console.log('GitHub last modified date:', lastModified);
+              const fetchedDate = await githubUploadService.getFileLastModified('public/data/lms-completion.json');
+              if (fetchedDate) {
+                lastModified = new Date(fetchedDate);
+              }
             } catch (e) {
-              console.warn('Could not fetch last modified date from GitHub:', e);
+              console.error('Error fetching last modified date from GitHub:', e);
             }
             
             this.saveData(jsonData, 'Local JSON Data');
@@ -191,7 +191,6 @@ export class DataPersistenceService {
               let lastModified: Date | null = null;
               try {
                 lastModified = await githubUploadService.getFileLastModified('public/data/lms-completion.csv');
-                console.log('GitHub last modified date:', lastModified);
               } catch (e) {
                 console.warn('Could not fetch last modified date from GitHub:', e);
               }
