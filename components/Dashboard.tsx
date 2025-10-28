@@ -18,10 +18,11 @@ interface DashboardProps {
   fileName: string;
   isMerged: boolean;
   trainerNames?: Record<string, string>;
+  areaManagerNames?: Record<string, string>;
   lastModified?: Date | null;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainerNames = {}, lastModified = null }) => {
+const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainerNames = {}, areaManagerNames = {}, lastModified = null }) => {
   // Create reverse mapping from name to ID for filtering
   const trainerIdsByName = useMemo(() => {
     const reverseMap: Record<string, string> = {};
@@ -951,7 +952,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainer
             <TrainerCompletionChart data={filteredData as MergedData[]} trainerNames={trainerNames} />
           </div>
           <div className="lg:col-span-2 xl:col-span-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-            <AreaManagerCompletionChart data={filteredData as MergedData[]} />
+            <AreaManagerCompletionChart data={filteredData as MergedData[]} areaManagerNames={areaManagerNames} />
           </div>
         </div>
       )}

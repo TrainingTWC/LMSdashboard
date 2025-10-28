@@ -29,6 +29,21 @@ const trainerNames: Record<string, string> = {
   'H2081': 'Sarit',
 };
 
+// Area Manager name mapping
+const areaManagerNames: Record<string, string> = {
+  'H1761': 'Mahadev',
+  'H701': 'Mallika',
+  'H1697': 'Sheldon',
+  'H3595': 'Bhawna',
+  'H2595': 'Kailash',
+  'H3252': 'Priyanka',
+  'H1278': 'Viraj',
+  'H3247': 'Sunil',
+  'H541': 'Amritanshu',
+  'H3237': 'Karam',
+  'H2081': 'Sarit',
+};
+
 const App: React.FC = () => {
   const [data, setData] = useState<(EmployeeTrainingRecord | MergedData)[] | null>(null);
   const [isMerged, setIsMerged] = useState<boolean>(false);
@@ -517,7 +532,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="p-4">
-                    <TabbedDashboard data={getManagerScopedData(userId, data)} fileName={`${fileName} (Manager Scope)`} isMerged={isMerged} trainerNames={trainerNames} lastModified={lastModified} />
+                    <TabbedDashboard data={getManagerScopedData(userId, data)} fileName={`${fileName} (Manager Scope)`} isMerged={isMerged} trainerNames={trainerNames} areaManagerNames={areaManagerNames} lastModified={lastModified} />
                   </div>
                 </div>
               </div>
@@ -531,7 +546,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="p-4">
-                    <TabbedDashboard data={getTrainerScopedData(userId, data)} fileName={`${fileName} (Trainer Scope)`} isMerged={isMerged} trainerNames={trainerNames} lastModified={lastModified} />
+                    <TabbedDashboard data={getTrainerScopedData(userId, data)} fileName={`${fileName} (Trainer Scope)`} isMerged={isMerged} trainerNames={trainerNames} areaManagerNames={areaManagerNames} lastModified={lastModified} />
                   </div>
                 </div>
               </div>
@@ -602,7 +617,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} trainerNames={trainerNames} lastModified={lastModified} />
+                  <TabbedDashboard data={data} fileName={fileName} isMerged={isMerged} trainerNames={trainerNames} areaManagerNames={areaManagerNames} lastModified={lastModified} />
                 )
               )}
             </>

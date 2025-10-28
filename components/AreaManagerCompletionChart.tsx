@@ -5,9 +5,10 @@ import { MergedData } from '../types';
 
 interface ChartProps {
   data: MergedData[];
+  areaManagerNames?: Record<string, string>;
 }
 
-const AreaManagerCompletionChart: React.FC<ChartProps> = ({ data }) => {
+const AreaManagerCompletionChart: React.FC<ChartProps> = ({ data, areaManagerNames = {} }) => {
   const amData = data.reduce((acc, record) => {
     const am = record.AM || 'Unknown';
     if (!acc[am]) {
@@ -20,9 +21,12 @@ const AreaManagerCompletionChart: React.FC<ChartProps> = ({ data }) => {
     return acc;
   }, {} as Record<string, { total: number; completed: number }>);
 
-  const chartData = Object.keys(amData).map(am => ({
-    name: am,
-    'Completion Rate': (amData[am].completed / amData[am].total) * 100,
+  const chartData = Object.keys(amData).map(amId => ({
+    name: areaManagerNames[amId] || amId,
+    amId: amId,
+    'Completion Rate': (amData[amId].completed / amData[amId].total) * 100,
+    total: amData[amId].total,
+    completed: amData[amId].completed
   })).sort((a, b) => b['Completion Rate'] - a['Completion Rate']); // Sort from high to low
 
   return (
