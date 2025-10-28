@@ -614,7 +614,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainer
       </div>
 
       {/* Multi-Select Filter Bar - Enhanced Mobile with Collapse */}
-      <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 overflow-visible relative shadow-sm" style={{ zIndex: 1 }}>
+      <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 overflow-visible relative shadow-sm" style={{ zIndex: 50 }}>
         {/* Filter Header - Mobile Friendly with Toggle */}
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <button 
@@ -643,7 +643,10 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainer
         </div>
 
         {/* Filters Grid - Collapsible on Mobile */}
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 overflow-hidden transition-all duration-300 ${isFiltersExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 lg:max-h-[2000px] lg:opacity-100'}`}>
+        <div 
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 transition-all duration-300 ${isFiltersExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 lg:max-h-[2000px] lg:opacity-100'}`} 
+          style={{ overflow: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'visible' : (isFiltersExpanded ? 'visible' : 'hidden') }}
+        >
           {/* Tenure Filter */}
           <div className="w-full">
             <MultiSelectFilter
