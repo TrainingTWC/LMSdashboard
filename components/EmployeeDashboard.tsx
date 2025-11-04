@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { EmployeeTrainingRecord, MergedData } from '../types';
 import { storeMappingData } from '../data/storeMapping';
 import MultiSelectFilter from './MultiSelectFilter';
+import StoreWiseView from './StoreWiseView';
 
 interface EmployeeDashboardProps {
   data: (EmployeeTrainingRecord | MergedData)[];
@@ -12,6 +13,9 @@ interface EmployeeDashboardProps {
 }
 
 const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, isMerged, trainerNames = {}, lastModified = null }) => {
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'employee' | 'store'>('employee');
+  
   // Create reverse mapping from name to ID for filtering
   const trainerIdsByName = useMemo(() => {
     const reverseMap: Record<string, string> = {};
@@ -397,6 +401,45 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-2 sm:p-3 border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setActiveTab('employee')}
+            className={`flex-1 px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 ${
+              activeTab === 'employee'
+                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            <span className="flex items-center justify-center gap-2">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Employee View
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('store')}
+            className={`flex-1 px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 ${
+              activeTab === 'store'
+                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            <span className="flex items-center justify-center gap-2">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Store-wise View
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Conditional Content Based on Active Tab */}
+      {activeTab === 'employee' ? (
+        <>
       {/* Multi-Select Filters - Collapsible */}
       <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200/50 dark:border-slate-700/50 overflow-visible relative shadow-sm" style={{ zIndex: 10 }}>
         {/* Filter Header - Mobile Friendly with Toggle */}
@@ -1128,6 +1171,11 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ data, fileName, i
             </div>
           </div>
         </div>
+      )}
+        </>
+      ) : (
+        /* Store-wise View */
+        <StoreWiseView data={data as MergedData[]} trainerNames={trainerNames} />
       )}
     </div>
   );

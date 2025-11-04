@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { EmployeeTrainingRecord, MergedData } from '../types';
+import StoreWiseView from './StoreWiseView';
 
 interface ManagerViewProps {
   data: (EmployeeTrainingRecord | MergedData)[];
@@ -31,6 +32,7 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterLevel, setFilterLevel] = useState<'all' | 'direct' | 'indirect'>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [activeTab, setActiveTab] = useState<'team' | 'storewise'>('team');
 
   // Build reporting hierarchy - find all employees reporting to this manager (direct and indirect)
   const teamData = useMemo(() => {
@@ -457,6 +459,41 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
           </div>
         </div>
 
+        {/* Tab Navigation */}
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setActiveTab('team')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'team'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+              }`}
+            >
+              Team Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab('storewise')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'storewise'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+              }`}
+            >
+              Store-wise View
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'storewise' && isMerged && (
+          <StoreWiseView 
+            data={teamData as MergedData[]} 
+            trainerNames={{}}
+          />
+        )}
+
+        {activeTab === 'team' && (
+          <>
         {/* Search and Filter Bar */}
         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -648,6 +685,8 @@ const ManagerView: React.FC<ManagerViewProps> = ({ data, managerCode, isMerged }
               </button>
             </div>
           </div>
+        )}
+          </>
         )}
 
         {/* Stat Card Detail Modal */}

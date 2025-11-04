@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { EmployeeTrainingRecord, MergedData } from '../types';
 import Dashboard from './Dashboard';
+import StoreWiseView from './StoreWiseView';
 import { storeMappingData } from '../data/storeMapping';
 
 interface TrainerViewProps {
@@ -39,7 +40,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [isStatModalOpen, setIsStatModalOpen] = useState<boolean>(false);
   const [selectedStatType, setSelectedStatType] = useState<'total' | 'highPerformers' | 'needsAttention' | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'overall'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'overall' | 'storewise'>('dashboard');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterStore, setFilterStore] = useState<string>('all');
   const [filterRegion, setFilterRegion] = useState<string>('all');
@@ -512,7 +513,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
 
         {/* Tabs: switch between trainer dashboard and overall scoped dashboard */}
         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-indigo-200/50 dark:border-indigo-700/50">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -533,6 +534,16 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
             >
               Overall Dashboard
             </button>
+            <button
+              onClick={() => setActiveTab('storewise')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'storewise'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+              }`}
+            >
+              Store-wise View
+            </button>
           </div>
 
           {activeTab === 'overall' && (
@@ -541,6 +552,13 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
               fileName={`Overall - ${trainerCode}`}
               isMerged={Boolean((filteredData as any)[0] && (filteredData as any)[0]['Store ID'])}
               lastModified={lastModified}
+            />
+          )}
+
+          {activeTab === 'storewise' && (
+            <StoreWiseView 
+              data={filteredData as MergedData[]} 
+              trainerNames={trainerNames}
             />
           )}
 
