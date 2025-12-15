@@ -24,6 +24,8 @@ const trainerNames: Record<string, string> = {
   'H3252': 'Priyanka',
   'H1278': 'Viraj',
   'H3247': 'Sunil',
+  'H3786': 'Oviya',
+  'H2155': 'Jagruti',
   'H541': 'Amritanshu',
   'H3237': 'Karam',
   'H2081': 'Sarit',
