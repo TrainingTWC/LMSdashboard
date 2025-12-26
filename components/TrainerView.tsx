@@ -73,11 +73,29 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
   const trainerInfo = useMemo(() => {
     const normalizedTrainerCode = trainerCode.toLowerCase();
     
+    // Check if this trainer has pan India access
+    // H541 (Amritanshu), H1697 (Sheldon) - Pan India access
+    const panIndiaManagers = ['h541', 'h1697'];
+    
+    if (panIndiaManagers.includes(normalizedTrainerCode)) {
+      // Pan India access - all stores
+      const stores = storeMappingData;
+      const storeIds = stores.map(s => s['Store ID']);
+      return { stores, storeIds, region: 'Pan India', isRegionalManager: true, isPanIndia: true };
+    }
+    
     // Check if this is a Regional Training Manager
+    // H701 (Mallika), H2155 (Jagruti), H3786 (Oviya) - South (entire region)
+    // H2595 (Kailash), H3595 (Bhawna) - North (entire region)
+    // H3252 (Priyanka), H1278 (Viraj) - West (entire region)
     const regionalManagers: Record<string, string> = {
-      'h1697': 'South',
+      'h701': 'South',
+      'h2155': 'South',
+      'h3786': 'South',
       'h2595': 'North',
-      'h3252': 'West'
+      'h3595': 'North',
+      'h3252': 'West',
+      'h1278': 'West'
     };
     
     const region = regionalManagers[normalizedTrainerCode];
@@ -86,13 +104,13 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
       // Regional Training Manager - get all stores in their region
       const stores = storeMappingData.filter(store => store.Region === region);
       const storeIds = stores.map(s => s['Store ID']);
-      return { stores, storeIds, region, isRegionalManager: true };
+      return { stores, storeIds, region, isRegionalManager: true, isPanIndia: false };
     }
     
     // Regular trainer - only their assigned stores
     const stores = storeMappingData.filter(store => store.Trainer.toLowerCase() === normalizedTrainerCode);
     const storeIds = stores.map(s => s['Store ID']);
-    return { stores, storeIds, region: null, isRegionalManager: false };
+    return { stores, storeIds, region: null, isRegionalManager: false, isPanIndia: false };
   }, [trainerCode]);
 
   // Check if this is E-Learning Specialist, Training Head, or HR Head (access to all data)
