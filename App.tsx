@@ -188,12 +188,27 @@ const App: React.FC = () => {
     if (!trainerId || !allData || allData.length === 0) return [];
     const normalizedTrainer = trainerId.toLowerCase();
     
+    // Check if this trainer has pan India access
+    // H541 (Amritanshu), H1697 (Sheldon) - Pan India access
+    const panIndiaManagers = ['h541', 'h1697'];
+    
+    if (panIndiaManagers.includes(normalizedTrainer)) {
+      // Pan India access - return all data
+      return allData;
+    }
+    
     // Check if this trainer is a Regional Training Manager
-    // H1697 (Sheldon) - South, H2595 (Kailash) - North, H3252 (Priyanka) - West
+    // H701 (Mallika), H2155 (Jagruti), H3786 (Oviya) - South (entire region)
+    // H2595 (Kailash), H3595 (Bhawna) - North (entire region)
+    // H3252 (Priyanka), H1278 (Viraj) - West (entire region)
     const regionalManagers = {
-      'h1697': 'South',
-      'h2595': 'North', 
-      'h3252': 'West'
+      'h701': 'South',
+      'h2155': 'South',
+      'h3786': 'South',
+      'h2595': 'North',
+      'h3595': 'North',
+      'h3252': 'West',
+      'h1278': 'West'
     };
     
     const region = regionalManagers[normalizedTrainer];
