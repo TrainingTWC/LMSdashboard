@@ -109,6 +109,7 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
     
     // Regular trainer - only their assigned stores
     const stores = storeMappingData.filter(store => 
+      store.Trainer?.toLowerCase() === normalizedTrainerCode ||
       store['Trainer 1']?.toLowerCase() === normalizedTrainerCode ||
       store['Trainer 2']?.toLowerCase() === normalizedTrainerCode ||
       store['Trainer 3']?.toLowerCase() === normalizedTrainerCode
