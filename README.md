@@ -1,6 +1,6 @@
 # 📊 Employee Training Dashboard
 
-A comprehensive training analytics dashboard with role-based access control for employees, managers, trainers, and administrators.
+A comprehensive training analytics dashboard with role-based access control for employees, store managers, area managers, trainers, and administrators.
 
 🔗 **Live Dashboard:** https://trainingtwc.github.io/LMSdashboard/
 
@@ -8,9 +8,10 @@ A comprehensive training analytics dashboard with role-based access control for 
 
 ### 🎯 Role-Based Access Control
 - **Admin View**: Full dashboard with all analytics and filters
+- **Trainer View**: Store-based access - see all employees in assigned stores
+- **Area Manager View**: Store-based access - see all employees in assigned stores
+- **Store Manager View**: Team-based access - see direct and indirect reports
 - **Employee View**: Personal training progress and course details
-- **Manager View**: Hierarchical team view with direct and indirect reports
-- **Trainer View**: Store-based access with role hierarchy (Trainer/E-Learning/Training Head/HR Head)
 
 ### 📈 Analytics & Insights
 - Course completion tracking
@@ -57,23 +58,31 @@ A comprehensive training analytics dashboard with role-based access control for 
 
 ### URL Parameters
 
-Access different views using URL parameters:
+Access different views using a single URL parameter `?id=`:
 
-| View Type | Parameter | Example |
-|-----------|-----------|---------|
-| Admin | None | `https://trainingtwc.github.io/LMSdashboard/` |
-| Employee | `employee_id` | `?employee_id=EMP001` |
-| Manager | `manager_id` | `?manager_id=H2595` |
-| Trainer | `trainer_id` | `?trainer_id=H1761` |
+| View Type | Example | Description |
+|-----------|---------|-------------|
+| Admin | `https://trainingtwc.github.io/LMSdashboard/` | Full dashboard (no parameter) |
+| Trainer | `?id=H3365` | See employees in assigned stores |
+| Area Manager | `?id=H1355` | See employees in assigned stores |
+| Store Manager | `?id=H2295` | See direct team members |
+| Employee | `?id=p2039` | Personal progress only |
 
-### Trainer Role Hierarchy
+### Role Hierarchy
 
-| Role | ID | Access Level |
-|------|-----|-------------|
-| Trainer | H1761, H701, H1697, etc. | Assigned stores only |
-| E-Learning Specialist | H541 | Full access (all stores) |
-| Training Head | H3237 | Full access (all stores) |
-| HR Head | H2081 | Full access (all stores) |
+The system automatically detects roles with this priority:
+
+1. **Trainer** (Highest) - Assigned via "Trainer" field in store mapping
+2. **Area Manager** - Assigned via "AM" field in store mapping
+3. **Store Manager** - Has direct reports in employee data
+4. **Employee** - Regular employee code
+
+| Role | Example ID | Access Level |
+|------|------------|-------------|
+| Trainer | H3365 | Employees in stores where assigned as Trainer |
+| Area Manager | H1355 | Employees in stores where assigned as AM |
+| Store Manager | H2295 | Direct and indirect team members |
+| Employee | p2039 | Only own data |
 
 📖 **Full Documentation:** See [ROLE_ACCESS_GUIDE.md](./ROLE_ACCESS_GUIDE.md)
 

@@ -8,7 +8,7 @@ import TrainerView from './components/TrainerView';
 import AdminLogin from './components/AdminLogin';
 import AdminPanel from './components/AdminPanel';
 import { Spinner } from './components/Spinner';
-import { storeMappingData } from './data/storeMapping';
+import { fetchStoreMappingData, getStoresForTrainerOrAM, isTrainerForStore, isAreaManagerForStore } from './services/storeMappingService';
 import ThemeToggle from './components/ThemeToggle';
 import { dataPersistenceService } from './services/dataPersistenceService';
 import { githubUploadService } from './services/githubUploadService';
@@ -59,6 +59,9 @@ const App: React.FC = () => {
   const [userRole, setUserRole] = useState<'employee' | 'manager' | 'trainer' | 'admin' | 'not-found'>('admin');
   const [userId, setUserId] = useState<string | null>(null);
   const [showScopedOverview, setShowScopedOverview] = useState<boolean>(false);
+  const [storeMappingData, setStoreMappingData] = useState<StoreRecord[]>([]);
+  const [storeMappingLoading, setStoreMappingLoading] = useState<boolean>(true);
+  const [storeMappingError, setStoreMappingError] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage for saved theme preference, default to light
     if (typeof window !== 'undefined') {
@@ -83,32 +86,54 @@ const App: React.FC = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  // Fetch store mapping data on mount
+  useEffect(() => {
+    const loadStoreMapping = async () => {
+      try {
+        setStoreMappingLoading(true);
+        setStoreMappingError(null);
+        const storeData = await fetchStoreMappingData();
+        setStoreMappingData(storeData);
+      } catch (err) {
+        console.error('Error loading store mapping:', err);
+        setStoreMappingError('Failed to load store mapping data from Google Sheets');
+      } finally {
+        setStoreMappingLoading(false);
+      }
+    };
+
+    loadStoreMapping();
+  }, []);
+
   // Role detection function - determines if ID is employee, manager, or trainer
   const detectRole = (id: string, dataToCheck: (EmployeeTrainingRecord | MergedData)[]): 'employee' | 'manager' | 'trainer' | null => {
-    if (!id || !dataToCheck || dataToCheck.length === 0) return null;
+    if (!id || !dataToCheck || dataToCheck.length === 0 || storeMappingData.length === 0) return null;
     
-    // Normalize ID to lowercase for case-insensitive comparison
-    const normalizedId = id.toLowerCase();
+    // Check if ID exists as Trainer in store mapping (checking all Trainer 1, 2, 3 fields)
+    const isTrainer = storeMappingData.some(store => isTrainerForStore(id, store));
     
-    // Check if ID exists as an employee
-    const isEmployee = dataToCheck.some(record => record.employee_code.toLowerCase() === normalizedId);
+    // Check if ID exists as Area Manager (AM) in store mapping
+    const isAreaManager = storeMappingData.some(store => isAreaManagerForStore(id, store));
     
-    // Check if ID has people reporting to them (manager)
-    const isManager = dataToCheck.some(record => record.reporting_manager_code.toLowerCase() === normalizedId);
-    
-    // Check if ID exists in store mapping as trainer or leadership role
-    const isTrainer = storeMappingData.some(store => 
-      store.Trainer.toLowerCase() === normalizedId || 
-      store['E-Learning Specialist'].toLowerCase() === normalizedId || 
-      store['Training Head'].toLowerCase() === normalizedId || 
-      store['HR Head'].toLowerCase() === normalizedId
+    // Check if ID has people reporting to them (store manager or regular manager)
+    const isManager = dataToCheck.some(record => 
+      record.reporting_manager_code?.toLowerCase() === id.toLowerCase()
     );
     
-    // Priority: Manager > Employee > Trainer
-    // If someone is a manager, show them the manager view (which includes their own completion)
+    // Check if ID exists as an employee
+    const isEmployee = dataToCheck.some(record => 
+      record.employee_code.toLowerCase() === id.toLowerCase()
+    );
+    
+    // Priority: Trainer > Area Manager > Store Manager > Employee
+    // Trainers and Area Managers see all employees in their assigned stores
+    if (isTrainer || isAreaManager) return 'trainer';
+    
+    // Store Managers see their direct team
     if (isManager) return 'manager';
+    
+    // Regular employees see only their own data
     if (isEmployee) return 'employee';
-    if (isTrainer) return 'trainer';
     
     return null;
   };
@@ -134,9 +159,9 @@ const App: React.FC = () => {
     autoLoadData();
   }, []); // Empty dependency array means this runs only once on mount
   
-  // Detect role when data or userId changes
+  // Detect role when data, userId, or storeMappingData changes
   useEffect(() => {
-    if (userId && data && data.length > 0) {
+    if (userId && data && data.length > 0 && storeMappingData.length > 0) {
       const detectedRole = detectRole(userId, data);
       if (detectedRole) {
         setUserRole(detectedRole);
@@ -147,7 +172,7 @@ const App: React.FC = () => {
     } else if (!userId) {
       setUserRole('admin');
     }
-  }, [userId, data]);
+  }, [userId, data, storeMappingData]);
 
   // Auto-open scoped admin overview for managers/trainers when role is set
   useEffect(() => {
@@ -183,67 +208,19 @@ const App: React.FC = () => {
     return allData.filter(r => allReports.has((r.employee_code || '').toLowerCase()));
   };
 
-  // Helper to produce trainer-scoped data (records for stores managed by trainer)
+  // Helper to produce trainer-scoped data (records for stores managed by trainer or area manager)
   const getTrainerScopedData = (trainerId: string, allData: (EmployeeTrainingRecord | MergedData)[]) => {
-    if (!trainerId || !allData || allData.length === 0) return [];
-    const normalizedTrainer = trainerId.toLowerCase();
+    if (!trainerId || !allData || allData.length === 0 || storeMappingData.length === 0) return [];
     
-    // Check if this trainer has pan India access
-    // H541 (Amritanshu), H1697 (Sheldon) - Pan India access
-    const panIndiaManagers = ['h541', 'h1697'];
+    // Get all stores where this ID is a Trainer or Area Manager
+    const stores = getStoresForTrainerOrAM(trainerId, storeMappingData);
     
-    if (panIndiaManagers.includes(normalizedTrainer)) {
-      // Pan India access - return all data
-      return allData;
-    }
-    
-    // Check if this trainer is a Regional Training Manager
-    // H701 (Mallika), H2155 (Jagruti), H3786 (Oviya) - South (entire region)
-    // H2595 (Kailash), H3595 (Bhawna) - North (entire region)
-    // H3252 (Priyanka), H1278 (Viraj) - West (entire region)
-    const regionalManagers = {
-      'h701': 'South',
-      'h2155': 'South',
-      'h3786': 'South',
-      'h2595': 'North',
-      'h3595': 'North',
-      'h3252': 'West',
-      'h1278': 'West'
-    };
-    
-    const region = regionalManagers[normalizedTrainer];
-    
-    if (region) {
-      // Regional Training Manager - give access to entire region
-      const regionalStoreIds = new Set(
-        storeMappingData
-          .filter(s => s.Region === region)
-          .map(s => s['Store ID'])
-      );
-      
-      return allData.filter(r => {
-        const storeId = (r as any)['Store ID'];
-        return storeId && regionalStoreIds.has(storeId);
-      });
-    }
-    
-    // Regular trainer - access only to their assigned stores
-    const stores = storeMappingData.filter(s => (
-      (s.Trainer || '').toLowerCase() === normalizedTrainer ||
-      (s['E-Learning Specialist'] || '').toLowerCase() === normalizedTrainer ||
-      (s['Training Head'] || '').toLowerCase() === normalizedTrainer ||
-      (s['HR Head'] || '').toLowerCase() === normalizedTrainer
-    ));
     const storeIds = new Set(stores.map(s => s['Store ID']));
 
-    // If merged data has Store ID, filter by it; otherwise try location/trainer field
+    // Filter data for employees in the assigned stores
     return allData.filter(r => {
       const storeId = (r as any)['Store ID'];
-      if (storeId && storeIds.size > 0) return storeIds.has(storeId);
-      // fallback: check merged Trainer field
-      const trainerField = (r as any).Trainer;
-      if (trainerField && typeof trainerField === 'string') return trainerField.toLowerCase() === normalizedTrainer;
-      return false;
+      return storeId && storeIds.has(storeId);
     });
   };
 
@@ -606,7 +583,32 @@ const App: React.FC = () => {
                 ) : userRole === 'manager' && userId ? (
                   <ManagerView data={data} managerCode={userId} isMerged={isMerged} />
                 ) : userRole === 'trainer' && userId ? (
-                  <TrainerView data={data} trainerCode={userId} trainerNames={trainerNames} lastModified={lastModified} />
+                  storeMappingLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Spinner />
+                      <p className="text-slate-600 dark:text-slate-300 mt-4">Loading store mapping data...</p>
+                    </div>
+                  ) : storeMappingError ? (
+                    <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-600 rounded-2xl p-8 shadow-2xl text-center">
+                      <span className="text-6xl mb-4">⚠️</span>
+                      <h3 className="text-2xl font-bold text-red-900 dark:text-red-100 mb-3">Store Mapping Error</h3>
+                      <p className="text-red-700 dark:text-red-300 mb-4">{storeMappingError}</p>
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                      >
+                        🔄 Try Again
+                      </button>
+                    </div>
+                  ) : (
+                    <TrainerView 
+                      data={data} 
+                      trainerCode={userId} 
+                      trainerNames={trainerNames}
+                      storeMappingData={storeMappingData}
+                      lastModified={lastModified} 
+                    />
+                  )
                 ) : userRole === 'not-found' && userId ? (
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-600 rounded-2xl p-8 shadow-2xl text-center max-w-2xl mx-auto">
                     <div className="flex flex-col items-center">

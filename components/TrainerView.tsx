@@ -1,19 +1,20 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import type { EmployeeTrainingRecord, MergedData } from '../types';
+import type { EmployeeTrainingRecord, MergedData, StoreRecord } from '../types';
 import Dashboard from './Dashboard';
 import StoreWiseView from './StoreWiseView';
-import { storeMappingData } from '../data/storeMapping';
+import { getStoresForTrainerOrAM, isAreaManagerForStore } from '../services/storeMappingService';
 
 interface TrainerViewProps {
   data: (EmployeeTrainingRecord | MergedData)[];
   trainerCode: string;
   trainerNames?: Record<string, string>;
+  storeMappingData: StoreRecord[];
   lastModified?: Date | null;
 }
 
 const ITEMS_PER_PAGE = 20; // Show 20 employees at a time
 
-const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNames = {}, lastModified = null }) => {
+const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNames = {}, storeMappingData, lastModified = null }) => {
   const parsePercent = (v: any) => {
     if (v === null || v === undefined) return 0;
     const raw = typeof v === 'string' ? v.replace(/%/g, '') : String(v);
@@ -71,88 +72,35 @@ const TrainerView: React.FC<TrainerViewProps> = ({ data, trainerCode, trainerNam
 
   // Get trainer info and their stores
   const trainerInfo = useMemo(() => {
-    const normalizedTrainerCode = trainerCode.toLowerCase();
+    // Get all stores where this ID is a Trainer or Area Manager
+    const stores = getStoresForTrainerOrAM(trainerCode, storeMappingData);
     
-    // Check if this trainer has pan India access
-    // H541 (Amritanshu), H1697 (Sheldon) - Pan India access
-    const panIndiaManagers = ['h541', 'h1697'];
-    
-    if (panIndiaManagers.includes(normalizedTrainerCode)) {
-      // Pan India access - all stores
-      const stores = storeMappingData;
-      const storeIds = stores.map(s => s['Store ID']);
-      return { stores, storeIds, region: 'Pan India', isRegionalManager: true, isPanIndia: true };
-    }
-    
-    // Check if this is a Regional Training Manager
-    // H701 (Mallika), H2155 (Jagruti), H3786 (Oviya) - South (entire region)
-    // H2595 (Kailash), H3595 (Bhawna) - North (entire region)
-    // H3252 (Priyanka), H1278 (Viraj) - West (entire region)
-    const regionalManagers: Record<string, string> = {
-      'h701': 'South',
-      'h2155': 'South',
-      'h3786': 'South',
-      'h2595': 'North',
-      'h3595': 'North',
-      'h3252': 'West',
-      'h1278': 'West'
-    };
-    
-    const region = regionalManagers[normalizedTrainerCode];
-    
-    if (region) {
-      // Regional Training Manager - get all stores in their region
-      const stores = storeMappingData.filter(store => store.Region === region);
-      const storeIds = stores.map(s => s['Store ID']);
-      return { stores, storeIds, region, isRegionalManager: true, isPanIndia: false };
-    }
-    
-    // Regular trainer - only their assigned stores
-    const stores = storeMappingData.filter(store => 
-      store.Trainer?.toLowerCase() === normalizedTrainerCode ||
-      store['Trainer 1']?.toLowerCase() === normalizedTrainerCode ||
-      store['Trainer 2']?.toLowerCase() === normalizedTrainerCode ||
-      store['Trainer 3']?.toLowerCase() === normalizedTrainerCode
-    );
     const storeIds = stores.map(s => s['Store ID']);
-    return { stores, storeIds, region: null, isRegionalManager: false, isPanIndia: false };
-  }, [trainerCode]);
+    const regions = [...new Set(stores.map(s => s.Region))];
+    const region = regions.length === 1 ? regions[0] : regions.length > 1 ? 'Multiple Regions' : null;
+    
+    return { stores, storeIds, region, isRegionalManager: false, isPanIndia: false };
+  }, [trainerCode, storeMappingData]);
 
-  // Check if this is E-Learning Specialist, Training Head, or HR Head (access to all data)
-  const hasFullAccess = useMemo(() => {
-    const normalizedTrainerCode = trainerCode.toLowerCase();
-    const eLearningSpecialist = storeMappingData.find(s => s['E-Learning Specialist'].toLowerCase() === normalizedTrainerCode);
-    const trainingHead = storeMappingData.find(s => s['Training Head'].toLowerCase() === normalizedTrainerCode);
-    const hrHead = storeMappingData.find(s => s['HR Head'].toLowerCase() === normalizedTrainerCode);
-    return !!(eLearningSpecialist || trainingHead || hrHead);
-  }, [trainerCode]);
-
-  // Get role name
+  // Determine if this is a Trainer or Area Manager
   const roleName = useMemo(() => {
-    const normalizedTrainerCode = trainerCode.toLowerCase();
+    // Check if they're an Area Manager
+    const isAreaManager = storeMappingData.some(s => isAreaManagerForStore(trainerCode, s));
     
-    // Check if Regional Training Manager
-    if (trainerInfo.isRegionalManager) {
-      return 'Regional Training Manager';
-    }
-    
-    if (storeMappingData.find(s => s['Training Head'] === trainerCode)) return 'Training Head';
-    if (storeMappingData.find(s => s['HR Head'] === trainerCode)) return 'HR Head';
-    if (storeMappingData.find(s => s['E-Learning Specialist'] === trainerCode)) return 'E-Learning Specialist';
+    if (isAreaManager) return 'Area Manager';
     return 'Trainer';
-  }, [trainerCode, trainerInfo.isRegionalManager]);
+  }, [trainerCode, storeMappingData]);
 
-  // Filter data by trainer's stores or show all if full access
+  // Check if this is E-Learning Specialist, Training Head, or HR Head (removed from access)
+  const hasFullAccess = false;
+
+  // Filter data by trainer's stores
   const filteredData = useMemo(() => {
-    if (hasFullAccess) {
-      return data; // Full access to all data
-    }
-    
     return data.filter(item => {
       const storeId = (item as MergedData)['Store ID'];
       return trainerInfo.storeIds.includes(storeId);
     });
-  }, [data, hasFullAccess, trainerInfo.storeIds]);
+  }, [data, trainerInfo.storeIds]);
 
   // Group data by employee with filters
   const employeeData = useMemo(() => {
