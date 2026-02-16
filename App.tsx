@@ -109,7 +109,10 @@ const App: React.FC = () => {
   // Re-merge employee data with store mapping whenever store mapping updates
   useEffect(() => {
     if (rawEmployeeData && rawEmployeeData.length > 0 && storeMappingData.length > 0) {
+      console.log('Re-merging data with store mapping. Store mapping count:', storeMappingData.length);
+      console.log('Raw employee data count:', rawEmployeeData.length);
       const mergedData = mergeWithStoreData(rawEmployeeData);
+      console.log('Merged data sample:', mergedData[0]);
       setData(mergedData);
       setIsMerged(true);
     }
@@ -255,6 +258,8 @@ const App: React.FC = () => {
       if (result.data && result.data.length > 0) {
         // Store raw employee data
         const employeeData = result.data as EmployeeTrainingRecord[];
+        console.log('Loaded employee data count:', employeeData.length);
+        console.log('Sample employee record Store ID:', employeeData[0]?.['Store ID']);
         setRawEmployeeData(employeeData);
         
         // Merge with store data if available
@@ -287,6 +292,10 @@ const App: React.FC = () => {
     const storeMap = new Map<string, Omit<StoreRecord, 'Store ID'>>(
       storeMappingData.map(s => [s['Store ID'], { location: s.location, Region: s.Region, AM: s.AM, Trainer: s.Trainer }])
     );
+
+    console.log('Merging data - Store Map size:', storeMap.size);
+    console.log('Sample employee Store ID:', data[0]?.['Store ID']);
+    console.log('Sample store mapping:', Array.from(storeMap.entries()).slice(0, 2));
 
     return data.map(emp => {
       const storeInfo = emp['Store ID'] ? storeMap.get(emp['Store ID']) : undefined;
