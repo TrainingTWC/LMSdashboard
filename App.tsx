@@ -48,6 +48,7 @@ const areaManagerNames: Record<string, string> = {
 
 const App: React.FC = () => {
   const [data, setData] = useState<(EmployeeTrainingRecord | MergedData)[] | null>(null);
+  const [rawEmployeeData, setRawEmployeeData] = useState<EmployeeTrainingRecord[] | null>(null);
   const [isMerged, setIsMerged] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,6 +105,15 @@ const App: React.FC = () => {
 
     loadStoreMapping();
   }, []);
+
+  // Re-merge employee data with store mapping whenever store mapping updates
+  useEffect(() => {
+    if (rawEmployeeData && rawEmployeeData.length > 0 && storeMappingData.length > 0) {
+      const mergedData = mergeWithStoreData(rawEmployeeData);
+      setData(mergedData);
+      setIsMerged(true);
+    }
+  }, [storeMappingData]);
 
   // Role detection function - determines if ID is employee, manager, or trainer
   const detectRole = (id: string, dataToCheck: (EmployeeTrainingRecord | MergedData)[]): 'employee' | 'manager' | 'trainer' | null => {
@@ -243,8 +253,12 @@ const App: React.FC = () => {
       const result = await dataPersistenceService.autoLoadData();
       
       if (result.data && result.data.length > 0) {
+        // Store raw employee data
+        const employeeData = result.data as EmployeeTrainingRecord[];
+        setRawEmployeeData(employeeData);
+        
         // Merge with store data if available
-        const mergedData = mergeWithStoreData(result.data as EmployeeTrainingRecord[]);
+        const mergedData = mergeWithStoreData(employeeData);
         setData(mergedData);
         setIsMerged(true);
         setDataSource(result.source);
@@ -334,6 +348,9 @@ const App: React.FC = () => {
 
           const firstRecordKeys = parsedData.columns.map(key => key.trim().replace(/\s+/g, ' '));
 
+          // Store raw employee data
+          setRawEmployeeData(parsedData);
+          
           if (firstRecordKeys.includes('Store ID')) {
             const mergedData = mergeWithStoreData(parsedData);
             setData(mergedData);
@@ -398,6 +415,9 @@ const App: React.FC = () => {
       
       const firstRecordKeys = parsedData.columns.map(key => key.trim().replace(/\s+/g, ' '));
 
+      // Store raw employee data
+      setRawEmployeeData(parsedData);
+      
       if (firstRecordKeys.includes('Store ID')) {
         const storeMap = new Map<string, Omit<StoreRecord, 'Store ID'>>(
           storeMappingData.map(s => [s['Store ID'], { location: s.location, Region: s.Region, AM: s.AM, Trainer: s.Trainer }])
