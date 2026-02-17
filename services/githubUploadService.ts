@@ -220,15 +220,22 @@ export class GitHubUploadService {
       }
       
       const url = `${this.baseUrl}/repos/${this.owner}/${this.repo}/commits?path=${path}&page=1&per_page=1`;
+      console.log('Fetching last modified from:', url);
       
       const response = await fetch(url, { headers });
+      console.log('GitHub API response status:', response.status);
       
       if (response.ok) {
         const commits = await response.json();
+        console.log('GitHub commits response:', commits?.length, 'commits found');
         if (commits && commits.length > 0) {
           const lastCommitDate = commits[0].commit.committer.date;
+          console.log('Last commit date:', lastCommitDate);
           return new Date(lastCommitDate);
         }
+      } else {
+        const errorText = await response.text();
+        console.error('GitHub API error:', response.status, errorText);
       }
       return null;
     } catch (error) {
