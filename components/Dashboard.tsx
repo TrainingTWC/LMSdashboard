@@ -601,13 +601,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, fileName, isMerged, trainer
                 minute: '2-digit'
               })
             ) : (
-              new Date().toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })
+              'N/A'
             )}
           </p>
         </div>
